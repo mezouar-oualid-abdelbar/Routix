@@ -2,12 +2,12 @@ import React, { Component } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import theme from "../styles/theme";
 
-class HomeScreen extends Component {
+class ActivitiesScreen extends Component {
   state = {};
   render() {
     return (
       <View style={styles.container}>
-        <Text>Hello to home screen</Text>
+        <Text>activity screen</Text>
       </View>
     );
   }
@@ -22,4 +22,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default ActivitiesScreen;

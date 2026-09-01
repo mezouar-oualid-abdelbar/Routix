@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Image, StatusBar, StyleSheet, Text, View } from "react-native";
+import theme from "../styles/theme";
 
 class SplashScreen extends Component {
   state = {};
@@ -34,7 +35,7 @@ class SplashScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1E2824", // Deep dark background from palette
+    backgroundColor: theme.colors.background, // Deep dark background from palette
     alignItems: "center",
     justifyContent: "center",
   },
@@ -44,19 +45,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
-  glowEffect: {
-    position: "absolute",
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "#42F241", // Bright neon green glow
-    opacity: 0.25,
-    shadowColor: "#42F241",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 25,
-    elevation: 15,
-  },
   logo: {
     width: 150,
     height: 150,
@@ -64,12 +52,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: theme.colors.text,
     letterSpacing: 2,
     textTransform: "uppercase",
   },
   accentText: {
-    color: "#42F241", // Highlights the last two letters in neon green
+    color: theme.colors.primary, // Highlights the last two letters in neon green
   },
 });
 
