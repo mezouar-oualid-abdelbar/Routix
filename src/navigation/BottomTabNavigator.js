@@ -6,6 +6,7 @@ import ActivitiesScreen from "../screens/ActivitiesScreen";
 import StatsScreen from "../screens/StatsScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import theme from "../styles/theme";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator();
 

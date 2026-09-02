@@ -11,10 +11,5 @@ class StatsScreen extends Component {
     );
   }
 }
- container: {
-    flex: 1,
-    backgroundColor: theme.colors.background, // Deep dark background from palette
-    alignItems: "center",
-    justifyContent: "center",
-  },
+
 export default StatsScreen;

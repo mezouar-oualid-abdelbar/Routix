@@ -7,7 +7,7 @@ class SplashScreen extends Component {
 
   componentDidMount() {
     setTimeout(() => {
-      this.props.navigation.replace("Home");
+      this.props.navigation.replace("BottomTabNavigator");
     }, 3000); // Reduced timeout to 3s for better user experience
   }
 
