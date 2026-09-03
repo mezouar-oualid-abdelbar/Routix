@@ -7,6 +7,7 @@ import StatsScreen from "../screens/StatsScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import theme from "../styles/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CreateActivityScreen from "../screens/CreateActivityScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -73,6 +74,13 @@ function BottomTabNavigator() {
               color={color}
             />
           ),
+        }}
+      />
+      <Tab.Screen
+        name="CreateActivityScreen"
+        component={CreateActivityScreen}
+        options={{
+          tabBarButton: () => null,
         }}
       />
     </Tab.Navigator>

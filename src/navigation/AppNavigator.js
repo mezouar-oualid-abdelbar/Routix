@@ -4,7 +4,6 @@ import SplashScreen from "../screens/SplashScreen";
 // import HomeScreen from "../screens/HomeScreen";
 import BottomTabNavigator from "./BottomTabNavigator";
 import SearchScreen from "../screens/SearchScreen";
-import CreateActivityScreen from "../screens/CreateActivityScreen";
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
@@ -20,10 +19,6 @@ export default function AppNavigator() {
       />
       <Stack.Screen name="BottomTabNavigator" component={BottomTabNavigator} />
       <Stack.Screen name="SearchScreen" component={SearchScreen} />
-      <Stack.Screen
-        name="CreateActivityScreen"
-        component={CreateActivityScreen}
-      />
     </Stack.Navigator>
   );
 }

@@ -10,42 +10,36 @@ import {
 import theme from "../styles/theme";
 import ActivityCard from "../components/ActivityCard";
 import { SafeAreaView } from "react-native-safe-area-context";
+import useActivityStore from "../store/activityStore";
 
-class ActivitiesScreen extends Component {
-  state = {
-    activities: [
-      { id: 1, title: "Activity1", time: "12am" },
-      { id: 2, title: "Activity2", time: "1pm" },
-    ],
-  };
+export default function ActivitiesScreen({ navigation }) {
+  const activities = useActivityStore((state) => state.activities);
 
-  render() {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.header}>Activities</Text>
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>Activities</Text>
 
-        <TextInput
-          style={styles.searchBar}
-          placeholderTextColor={theme.colors.textSecondary}
-          onFocus={() => this.props.navigation.navigate("SearchScreen")}
-          placeholder="search for your activity"
-        />
+      <TextInput
+        style={styles.searchBar}
+        placeholderTextColor={theme.colors.textSecondary}
+        onFocus={() => navigation.navigate("SearchScreen")}
+        placeholder="search for your activity"
+      />
 
-        <FlatList
-          style={styles.list}
-          data={this.state.activities}
-          renderItem={({ item }) => <ActivityCard activity={item} />}
-          keyExtractor={(item) => String(item.id)}
-        />
+      <FlatList
+        style={styles.list}
+        data={activities}
+        renderItem={({ item }) => <ActivityCard activity={item} />}
+        keyExtractor={(item) => String(item.id)}
+      />
 
-        <Button
-          color={theme.colors.primary}
-          title="create activity"
-          onPress={() => this.props.navigation.navigate("CreateActivityScreen")}
-        />
-      </SafeAreaView>
-    );
-  }
+      <Button
+        color={theme.colors.primary}
+        title="create activity"
+        onPress={() => navigation.navigate("CreateActivityScreen")}
+      />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -75,5 +69,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-export default ActivitiesScreen;

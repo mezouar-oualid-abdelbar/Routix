@@ -1,14 +1,17 @@
 import React, { Component } from "react";
 import { Image, StatusBar, StyleSheet, Text, View } from "react-native";
 import theme from "../styles/theme";
+import { initDatabase } from "../api/database";
+
+import useActivityStore from "../store/activityStore";
 
 class SplashScreen extends Component {
   state = {};
 
-  componentDidMount() {
-    setTimeout(() => {
-      this.props.navigation.replace("BottomTabNavigator");
-    }, 3000); // Reduced timeout to 3s for better user experience
+  async componentDidMount() {
+    await initDatabase();
+    await useActivityStore.getState().loadActivities();
+    this.props.navigation.replace("BottomTabNavigator");
   }
 
   render() {
