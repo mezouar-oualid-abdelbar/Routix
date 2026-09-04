@@ -1,15 +1,17 @@
 import { Component } from "react";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import theme from "../styles/theme";
 
 class ActivityCard extends Component {
   render() {
     const { activity } = this.props;
     return (
-      <View style={styles.card}>
-        <Text style={styles.title}>{activity.title}</Text>
-        <Text style={styles.time}>{activity.time}</Text>
-      </View>
+      <TouchableOpacity onPress={() => this.props.onDelete(activity)}>
+        <View style={styles.card}>
+          <Text style={styles.title}>{activity.title}</Text>
+          <Text style={styles.time}>{activity.time}</Text>
+        </View>
+      </TouchableOpacity>
     );
   }
 }

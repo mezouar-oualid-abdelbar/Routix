@@ -14,17 +14,32 @@ export async function initDatabase() {
         title TEXT NOT NULL,
         time TEXT NOT NULL
     );
-
-    INSERT INTO activities (title, time) VALUES
-        ('activity 1', '1:00 AM'),
-        ('activity 2', '2:00 AM'),
-        ('activity 3', '3:00 AM');
-
+  
   `);
 
   return db;
 }
 
+export async function deleteActivity(activity) {
+  await db.runAsync("DELETE FROM activities WHERE id = ?", activity.id);
+}
+
+export async function insertActivity(activity) {
+  await db.runAsync(
+    "INSERT INTO activities (title, time) VALUES (?, ?)",
+    activity.title,
+    activity.time,
+  );
+}
+
+export async function updateActivity(activity) {
+  await db.runAsync(
+    "UPDATE activities SET title = ?, time = ? WHERE id = ?",
+    activity.title,
+    activity.time,
+    activity.id,
+  );
+}
 export function getDb() {
   return db;
 }

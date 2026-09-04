@@ -14,7 +14,7 @@ import useActivityStore from "../store/activityStore";
 
 export default function ActivitiesScreen({ navigation }) {
   const activities = useActivityStore((state) => state.activities);
-
+  const deleteActivity = useActivityStore((state) => state.deleteActivity);
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Activities</Text>
@@ -29,7 +29,9 @@ export default function ActivitiesScreen({ navigation }) {
       <FlatList
         style={styles.list}
         data={activities}
-        renderItem={({ item }) => <ActivityCard activity={item} />}
+        renderItem={({ item }) => (
+          <ActivityCard activity={item} onDelete={deleteActivity} />
+        )}
         keyExtractor={(item) => String(item.id)}
       />
 

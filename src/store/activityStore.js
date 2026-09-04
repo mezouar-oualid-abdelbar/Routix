@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { getDb } from "../api/database";
+import { deleteActivity as deleteActivityFromDb } from "../api/database";
 
-const useActivityStore = create((set) => ({
+const useActivityStore = create((set, get) => ({
   activities: [],
 
   loadActivities: async () => {
@@ -9,13 +10,10 @@ const useActivityStore = create((set) => ({
     set({ activities: result });
   },
 
-  // addActivity: (activity) =>
-  //   set((state) => ({ activities: [...state.activities, activity] })),
-
-  // deleteActivity: (id) =>
-  //   set((state) => ({
-  //     activities: state.activities.filter((a) => a.id !== id),
-  //   })),
+  deleteActivity: async (activity) => {
+    await deleteActivityFromDb(activity);
+    get().loadActivities();
+  },
 }));
 
 export default useActivityStore;
