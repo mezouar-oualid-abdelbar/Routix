@@ -1,0 +1,125 @@
+-- ============================
+-- CATEGORIES
+-- ============================
+CREATE TABLE categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  color TEXT
+);
+
+-- ============================
+-- ACTIVITIES (core table)
+-- ============================
+CREATE TABLE activities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  description TEXT,
+  priority TEXT,               -- e.g. "low" | "medium" | "high"
+  category_id INTEGER,
+  type TEXT NOT NULL,          -- "normal" | "timed" | "followup" | "multitask"
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+);
+
+-- ============================
+-- TIMED ACTIVITY EXTRA DATA
+-- ============================
+CREATE TABLE activity_timed (
+  activity_id INTEGER PRIMARY KEY,
+  duration_minutes INTEGER NOT NULL,
+
+  FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+);
+
+-- ============================
+-- FOLLOW-UP STEPS (definition)
+-- ============================
+CREATE TABLE followup_steps (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_id INTEGER NOT NULL,
+  step_order INTEGER NOT NULL,
+  title TEXT NOT NULL,
+
+  FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+);
+
+-- ============================
+-- MULTITASK ITEMS (definition)
+-- ============================
+CREATE TABLE multitask_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_id INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  item_order INTEGER,
+
+  FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+);
+
+-- ============================
+-- ACTIVITY LOGS (one row per completion/attempt event)
+-- ============================
+CREATE TABLE activity_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_id INTEGER NOT NULL,
+  completed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  status TEXT NOT NULL,
+  -- valid values depend on activities.type, enforced in app code:
+  -- normal:     "done" | "missed"
+  -- timed:      "done" | "overdo" | "interrupted" | "missed"
+  -- multitask:  "complete" | "partial" | "missed"
+  -- followup:   "complete" | "partial" | "missed"
+
+  FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE
+);
+
+-- ============================
+-- TIMED LOG DETAILS
+-- ============================
+CREATE TABLE activity_timed_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_log_id INTEGER NOT NULL,
+  started_at TEXT,
+  ended_at TEXT,
+  time_spent_seconds INTEGER,
+  extra_time_added_seconds INTEGER,   -- only set when status = "overdo"
+
+  FOREIGN KEY (activity_log_id) REFERENCES activity_logs(id) ON DELETE CASCADE
+);
+
+-- ============================
+-- FOLLOW-UP LOG ENTRIES (per-step completion within a run)
+-- ============================
+CREATE TABLE followup_log_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_log_id INTEGER NOT NULL,
+  step_id INTEGER NOT NULL,
+  completed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  reminder_delay_minutes INTEGER,   -- entered by user at completion time
+
+  FOREIGN KEY (activity_log_id) REFERENCES activity_logs(id) ON DELETE CASCADE,
+  FOREIGN KEY (step_id) REFERENCES followup_steps(id) ON DELETE CASCADE
+);
+
+-- ============================
+-- MULTITASK LOG ENTRIES (per-item outcome within a run)
+-- ============================
+CREATE TABLE multitask_log_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_log_id INTEGER NOT NULL,
+  item_id INTEGER NOT NULL,
+  status TEXT NOT NULL,   -- "completed" | "skipped"
+
+  FOREIGN KEY (activity_log_id) REFERENCES activity_logs(id) ON DELETE CASCADE,
+  FOREIGN KEY (item_id) REFERENCES multitask_items(id) ON DELETE CASCADE
+);
+
+-- ============================
+-- TODOS (simple, standalone)
+-- ============================
+CREATE TABLE todos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  is_done INTEGER NOT NULL DEFAULT 0,   -- SQLite has no boolean type; 0/1
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
