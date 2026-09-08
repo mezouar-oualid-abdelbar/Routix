@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SwitchSelector from "react-native-switch-selector";
@@ -17,7 +18,7 @@ class MultiActivitiesForm extends Component {
     showModal: false,
     type: "normal",
     activity_title: "",
-    duration: { hours: 0, minutes: 30 },
+    duration: { hours: 0, minutes: 30, seconds: 0 },
     switchType: [
       { label: "Normal", value: "normal" },
       { label: "Timed", value: "timed" },
@@ -40,6 +41,7 @@ class MultiActivitiesForm extends Component {
       showModal: false,
       activity_title: "",
       type: "normal",
+      duration: { hours: 0, minutes: 30, seconds: 0 },
     });
   };
 
@@ -52,7 +54,6 @@ class MultiActivitiesForm extends Component {
     return (
       <View style={styles.timerWrapper}>
         <TimerPicker
-          hideSeconds
           initialValue={duration}
           onDurationChange={(duration) => this.setState({ duration })}
           styles={{
@@ -78,46 +79,59 @@ class MultiActivitiesForm extends Component {
 
   renderTypeForm() {
     const { showModal } = this.state;
-    if (!showModal) return null;
 
     return (
-      <View style={styles.modalCard}>
-        <Text style={styles.modalTitle}>Add Activity</Text>
+      <Modal
+        visible={showModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => this.setState({ showModal: false })}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Add Activity</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="activity name"
-          placeholderTextColor={theme.colors.textSecondary}
-          value={this.state.activity_title}
-          onChangeText={(activity_title) => this.setState({ activity_title })}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="activity name"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={this.state.activity_title}
+              onChangeText={(activity_title) =>
+                this.setState({ activity_title })
+              }
+            />
 
-        <SwitchSelector
-          options={this.state.switchType}
-          initial={0}
-          onPress={(value) => this.setState({ type: value })}
-          buttonColor={theme.colors.primary}
-          backgroundColor={theme.colors.surface}
-          textColor={theme.colors.textSecondary}
-          selectedTextStyle={{ color: theme.colors.textInverse }}
-          style={styles.switch}
-        />
+            <SwitchSelector
+              options={this.state.switchType}
+              initial={0}
+              onPress={(value) => this.setState({ type: value })}
+              buttonColor={theme.colors.primary}
+              backgroundColor={theme.colors.surface}
+              textColor={theme.colors.textSecondary}
+              selectedTextStyle={{ color: theme.colors.textInverse }}
+              style={styles.switch}
+            />
 
-        {this.renderTimeInput()}
+            {this.renderTimeInput()}
 
-        <View style={styles.modalButtonRow}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => this.setState({ showModal: false })}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => this.setState({ showModal: false })}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.saveButton} onPress={this.handleSave}>
-            <Text style={styles.saveButtonText}>Save</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={this.handleSave}
+              >
+                <Text style={styles.saveButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </View>
+      </Modal>
     );
   }
 
@@ -145,7 +159,9 @@ class MultiActivitiesForm extends Component {
             <Text style={styles.taskTitle}>{task.title}</Text>
             {task.type === "timed" && (
               <Text style={styles.taskDuration}>
-                {task.duration.hours}h {task.duration.minutes}m
+                {task.duration.hours ? `${task.duration.hours}h ` : ""}
+                {task.duration.minutes ? `${task.duration.minutes}m ` : ""}
+                {task.duration.seconds || 0}s
               </Text>
             )}
           </View>
@@ -221,11 +237,18 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: theme.fontWeights.medium,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: theme.spacing.md,
+  },
   modalCard: {
+    width: "100%",
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
   },
   modalTitle: {
     fontSize: theme.fontSizes.md,
