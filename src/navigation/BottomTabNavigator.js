@@ -80,7 +80,8 @@ function BottomTabNavigator() {
         name="CreateActivityScreen"
         component={CreateActivityScreen}
         options={{
-          tabBarButton: () => null,
+          tabBarItemStyle: { display: "none" },
+          tabBarStyle: { display: "none" },
         }}
       />
     </Tab.Navigator>

@@ -1,4 +1,4 @@
-import { Component } from "react";
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -12,50 +12,56 @@ import SwitchSelector from "react-native-switch-selector";
 import { TimerPicker } from "react-native-timer-picker";
 import theme from "../styles/theme";
 
-class MultiActivitiesForm extends Component {
-  state = {
-    tasks: [],
-    showModal: false,
-    type: "normal",
-    activity_title: "",
-    duration: { hours: 0, minutes: 30, seconds: 0 },
-    switchType: [
-      { label: "Normal", value: "normal" },
-      { label: "Timed", value: "timed" },
-    ],
-  };
+export function MultiActivitiesForm({ typeData, setTypeData }) {
+  const tasks = Array.isArray(typeData) ? typeData : [];
 
-  handleSave = () => {
-    const { activity_title, type, duration, tasks } = this.state;
-    if (!activity_title.trim()) return;
+  const [showModal, setShowModal] = useState(false);
+  const [type, setType] = useState("normal");
+  const [activityTitle, setActivityTitle] = useState("");
+  const [duration, setDuration] = useState({
+    hours: 0,
+    minutes: 30,
+    seconds: 0,
+  });
+
+  const switchType = [
+    { label: "Normal", value: "normal" },
+    { label: "Timed", value: "timed" },
+  ];
+
+  const handleSave = () => {
+    if (!activityTitle.trim()) return;
 
     const newTask = {
       id: Date.now().toString(),
-      title: activity_title,
+      title: activityTitle.trim(),
       type,
-      duration,
+      duration: type === "timed" ? duration : null,
     };
 
-    this.setState({
-      tasks: [...tasks, newTask],
-      showModal: false,
-      activity_title: "",
-      type: "normal",
-      duration: { hours: 0, minutes: 30, seconds: 0 },
-    });
+    const updatedTasks = [...tasks, newTask];
+    setTypeData(updatedTasks);
+
+    // Reset modal form state
+    setShowModal(false);
+    setActivityTitle("");
+    setType("normal");
+    setDuration({ hours: 0, minutes: 30, seconds: 0 });
   };
 
-  renderTimeInput() {
-    const { type, duration } = this.state;
-    if (type === "normal") {
-      return null;
-    }
+  const handleDeleteTask = (id) => {
+    const updatedTasks = tasks.filter((task) => task.id !== id);
+    setTypeData(updatedTasks);
+  };
+
+  const renderTimeInput = () => {
+    if (type === "normal") return null;
 
     return (
       <View style={styles.timerWrapper}>
         <TimerPicker
           initialValue={duration}
-          onDurationChange={(duration) => this.setState({ duration })}
+          onDurationChange={setDuration}
           styles={{
             theme: "dark",
             backgroundColor: theme.colors.background,
@@ -75,110 +81,107 @@ class MultiActivitiesForm extends Component {
         />
       </View>
     );
-  }
+  };
 
-  renderTypeForm() {
-    const { showModal } = this.state;
+  const renderModal = () => (
+    <Modal
+      visible={showModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>Add Activity</Text>
 
-    return (
-      <Modal
-        visible={showModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => this.setState({ showModal: false })}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Add Activity</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Activity name"
+            placeholderTextColor={theme.colors.textSecondary}
+            value={activityTitle}
+            onChangeText={setActivityTitle}
+          />
 
-            <TextInput
-              style={styles.input}
-              placeholder="activity name"
-              placeholderTextColor={theme.colors.textSecondary}
-              value={this.state.activity_title}
-              onChangeText={(activity_title) =>
-                this.setState({ activity_title })
-              }
-            />
+          <SwitchSelector
+            options={switchType}
+            initial={0}
+            onPress={(value) => setType(value)}
+            buttonColor={theme.colors.primary}
+            backgroundColor={theme.colors.surface}
+            textColor={theme.colors.textSecondary}
+            selectedTextStyle={{ color: theme.colors.textInverse }}
+            style={styles.switch}
+          />
 
-            <SwitchSelector
-              options={this.state.switchType}
-              initial={0}
-              onPress={(value) => this.setState({ type: value })}
-              buttonColor={theme.colors.primary}
-              backgroundColor={theme.colors.surface}
-              textColor={theme.colors.textSecondary}
-              selectedTextStyle={{ color: theme.colors.textInverse }}
-              style={styles.switch}
-            />
+          {renderTimeInput()}
 
-            {this.renderTimeInput()}
+          <View style={styles.modalButtonRow}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
 
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => this.setState({ showModal: false })}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={this.handleSave}
-              >
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-    );
-  }
-
-  render() {
-    const { tasks } = this.state;
-
-    return (
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={styles.header}>Activities</Text>
-          <Text style={styles.count}>{tasks.length}</Text>
-        </View>
-
-        {tasks.map((task) => (
-          <View key={task.id} style={styles.taskRow}>
-            <Ionicons
-              name={
-                task.type === "timed"
-                  ? "time-outline"
-                  : "checkmark-circle-outline"
-              }
-              size={18}
-              color={theme.colors.primary}
-            />
-            <Text style={styles.taskTitle}>{task.title}</Text>
-            {task.type === "timed" && (
-              <Text style={styles.taskDuration}>
-                {task.duration.hours ? `${task.duration.hours}h ` : ""}
-                {task.duration.minutes ? `${task.duration.minutes}m ` : ""}
-                {task.duration.seconds || 0}s
-              </Text>
-            )}
-          </View>
-        ))}
-
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => this.setState({ showModal: true })}
-        >
-          <Ionicons name="add" size={18} color={theme.colors.primary} />
-          <Text style={styles.addButtonText}>Add Activity</Text>
-        </TouchableOpacity>
-
-        {this.renderTypeForm()}
       </View>
-    );
-  }
+    </Modal>
+  );
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <Text style={styles.header}>Activities</Text>
+        <Text style={styles.count}>{tasks.length}</Text>
+      </View>
+
+      {tasks.map((task) => (
+        <View key={task.id} style={styles.taskRow}>
+          <Ionicons
+            name={
+              task.type === "timed"
+                ? "time-outline"
+                : "checkmark-circle-outline"
+            }
+            size={18}
+            color={theme.colors.primary}
+          />
+
+          <Text style={styles.taskTitle}>{task.title}</Text>
+
+          {task.type === "timed" && task.duration && (
+            <Text style={styles.taskDuration}>
+              {task.duration.hours ? `${task.duration.hours}h ` : ""}
+              {task.duration.minutes ? `${task.duration.minutes}m ` : ""}
+              {task.duration.seconds ? `${task.duration.seconds}s` : ""}
+            </Text>
+          )}
+
+          <TouchableOpacity onPress={() => handleDeleteTask(task.id)}>
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setShowModal(true)}
+      >
+        <Ionicons name="add" size={18} color={theme.colors.primary} />
+        <Text style={styles.addButtonText}>Add Activity</Text>
+      </TouchableOpacity>
+
+      {renderModal()}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

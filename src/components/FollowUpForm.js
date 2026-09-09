@@ -1,4 +1,4 @@
-import { Component } from "react";
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -9,87 +9,82 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import theme from "../styles/theme";
 
-class FollowUpForm extends Component {
-  state = {
-    steps: [],
-    stepTitle: "",
-  };
+export function FollowUpForm({ typeData, setTypeData }) {
+  const steps = Array.isArray(typeData) ? typeData : [];
+  const [stepTitle, setStepTitle] = useState("");
 
-  addStep = () => {
-    const { stepTitle, steps } = this.state;
+  const addStep = () => {
     if (!stepTitle.trim()) return;
 
-    const newStep = { id: Date.now().toString(), title: stepTitle };
-    this.setState({ steps: [...steps, newStep], stepTitle: "" });
+    const newStep = { id: Date.now().toString(), title: stepTitle.trim() };
+    const updatedSteps = [...steps, newStep];
+
+    setTypeData(updatedSteps);
+    setStepTitle("");
   };
 
-  removeStep = (id) => {
-    this.setState((state) => ({
-      steps: state.steps.filter((step) => step.id !== id),
-    }));
+  const removeStep = (id) => {
+    const updatedSteps = steps.filter((step) => step.id !== id);
+    setTypeData(updatedSteps);
   };
 
-  render() {
-    const { steps, stepTitle } = this.state;
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <Text style={styles.header}>Steps</Text>
+        <Text style={styles.count}>{steps.length}</Text>
+      </View>
 
-    return (
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={styles.header}>Steps</Text>
-          <Text style={styles.count}>{steps.length}</Text>
-        </View>
-
-        {steps.map((step, index) => (
-          <View key={step.id} style={styles.stepRow}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>{index + 1}</Text>
-            </View>
-
-            <Text style={styles.stepTitle}>{step.title}</Text>
-
-            {index < steps.length - 1 && (
-              <Ionicons
-                name="arrow-forward"
-                size={16}
-                color={theme.colors.textSecondary}
-                style={styles.stepArrow}
-              />
-            )}
-
-            <TouchableOpacity onPress={() => this.removeStep(step.id)}>
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-            </TouchableOpacity>
+      {steps.map((step, index) => (
+        <View key={step.id} style={styles.stepRow}>
+          <View style={styles.stepNumber}>
+            <Text style={styles.stepNumberText}>{index + 1}</Text>
           </View>
-        ))}
 
-        <View style={styles.addRow}>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Dry laundry"
-            placeholderTextColor={theme.colors.textSecondary}
-            value={stepTitle}
-            onChangeText={(stepTitle) => this.setState({ stepTitle })}
-            onSubmitEditing={this.addStep}
-            returnKeyType="done"
-          />
+          <Text style={styles.stepTitle}>{step.title}</Text>
 
-          <TouchableOpacity style={styles.addButton} onPress={this.addStep}>
-            <Ionicons name="add" size={22} color={theme.colors.background} />
+          {index < steps.length - 1 && (
+            <Ionicons
+              name="arrow-forward"
+              size={16}
+              color={theme.colors.textSecondary}
+              style={styles.stepArrow}
+            />
+          )}
+
+          <TouchableOpacity onPress={() => removeStep(step.id)}>
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color={theme.colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
+      ))}
 
-        {steps.length === 0 && (
-          <Text style={styles.hint}>
-            Add steps in order — you'll be reminded to move to the next one.
-          </Text>
-        )}
+      <View style={styles.addRow}>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. Dry laundry"
+          placeholderTextColor={theme.colors.textSecondary}
+          value={stepTitle}
+          onChangeText={setStepTitle}
+          onSubmitEditing={addStep}
+          returnKeyType="done"
+        />
+
+        <TouchableOpacity style={styles.addButton} onPress={addStep}>
+          <Ionicons name="add" size={22} color={theme.colors.background} />
+        </TouchableOpacity>
       </View>
-    );
-  }
+
+      {steps.length === 0 && (
+        <Text style={styles.hint}>
+          Add steps in order — you'll be reminded to move to the next one.
+        </Text>
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

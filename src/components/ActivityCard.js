@@ -6,7 +6,8 @@ class ActivityCard extends Component {
   render() {
     const { activity } = this.props;
     return (
-      <TouchableOpacity onPress={() => this.props.onDelete(activity)}>
+      <TouchableOpacity>
+        {/* <TouchableOpacity onPress={() => this.props.onDelete(activity)}> */}
         <View style={styles.card}>
           <Text style={styles.title}>{activity.title}</Text>
           <Text style={styles.time}>{activity.time}</Text>

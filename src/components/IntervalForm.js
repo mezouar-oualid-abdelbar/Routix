@@ -1,36 +1,31 @@
-import { Component } from "react";
+import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import theme from "../styles/theme";
 
-class IntervalForm extends Component {
-  state = {
-    intervalDays: "2",
+export function IntervalForm({ scheduleData, setScheduleData }) {
+  const intervalDays = scheduleData != null ? String(scheduleData) : "2";
+
+  const handleChangeText = (value) => {
+    const cleanedValue = value.replace(/[^0-9]/g, "");
+    setScheduleData(cleanedValue);
   };
 
-  render() {
-    const { intervalDays } = this.state;
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Repeat every</Text>
 
-    return (
-      <View style={styles.container}>
-        <Text style={styles.label}>Repeat every</Text>
-
-        <View style={styles.row}>
-          <TextInput
-            style={styles.input}
-            value={intervalDays}
-            onChangeText={(value) =>
-              this.setState({ intervalDays: value.replace(/[^0-9]/g, "") })
-            }
-            keyboardType="number-pad"
-            maxLength={3}
-          />
-          <Text style={styles.unit}>
-            {intervalDays === "1" ? "day" : "days"}
-          </Text>
-        </View>
+      <View style={styles.row}>
+        <TextInput
+          style={styles.input}
+          value={intervalDays}
+          onChangeText={handleChangeText}
+          keyboardType="number-pad"
+          maxLength={3}
+        />
+        <Text style={styles.unit}>{intervalDays === "1" ? "day" : "days"}</Text>
       </View>
-    );
-  }
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

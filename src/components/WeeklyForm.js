@@ -1,4 +1,4 @@
-import { Component } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import theme from "../styles/theme";
 
@@ -12,57 +12,46 @@ const DAYS = [
   { label: "S", value: "saturday" },
 ];
 
-class WeeklyForm extends Component {
-  state = {
-    selectedDays: [],
+export function WeeklyForm({ scheduleData, setScheduleData }) {
+  const selectedDays = Array.isArray(scheduleData) ? scheduleData : [];
+
+  const toggleDay = (day) => {
+    const isSelected = selectedDays.includes(day);
+    const updatedDays = isSelected
+      ? selectedDays.filter((d) => d !== day)
+      : [...selectedDays, day];
+
+    setScheduleData(updatedDays);
   };
 
-  toggleDay = (day) => {
-    this.setState((state) => {
-      const isSelected = state.selectedDays.includes(day);
-      return {
-        selectedDays: isSelected
-          ? state.selectedDays.filter((d) => d !== day)
-          : [...state.selectedDays, day],
-      };
-    });
-  };
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Repeat on</Text>
 
-  render() {
-    const { selectedDays } = this.state;
-
-    return (
-      <View style={styles.container}>
-        <Text style={styles.label}>Repeat on</Text>
-
-        <View style={styles.dayRow}>
-          {DAYS.map((day) => {
-            const isSelected = selectedDays.includes(day.value);
-            return (
-              <TouchableOpacity
-                key={day.value}
-                style={[
-                  styles.dayCircle,
-                  isSelected && styles.dayCircleSelected,
-                ]}
-                onPress={() => this.toggleDay(day.value)}
+      <View style={styles.dayRow}>
+        {DAYS.map((day) => {
+          const isSelected = selectedDays.includes(day.value);
+          return (
+            <TouchableOpacity
+              key={day.value}
+              style={[styles.dayCircle, isSelected && styles.dayCircleSelected]}
+              onPress={() => toggleDay(day.value)}
+            >
+              <Text
+                style={[styles.dayText, isSelected && styles.dayTextSelected]}
               >
-                <Text
-                  style={[styles.dayText, isSelected && styles.dayTextSelected]}
-                >
-                  {day.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {selectedDays.length === 0 && (
-          <Text style={styles.hint}>Select at least one day</Text>
-        )}
+                {day.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
-    );
-  }
+
+      {selectedDays.length === 0 && (
+        <Text style={styles.hint}>Select at least one day</Text>
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

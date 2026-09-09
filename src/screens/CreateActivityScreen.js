@@ -13,6 +13,7 @@ import { TypeForm } from "../components/TypeForm";
 import { ScheduleForm } from "../components/ScheduleForm";
 import { Time } from "../components/inputs/Time";
 import { FormatTime as formatTime } from "../utiles/FormatTime";
+
 export function CreateActivityScreen() {
   const [step, setStep] = useState(1);
 
@@ -83,11 +84,22 @@ export function CreateActivityScreen() {
 
   const renderTypeDataPreview = (data) => {
     if (!data) return "—";
+    if (Array.isArray(data)) {
+      return data.map((item) => item.title || JSON.stringify(item)).join(", ");
+    }
     if (typeof data === "object") {
       if (data.hours !== undefined || data.minutes !== undefined) {
         return `${data.hours || 0}h ${data.minutes || 0}m`;
       }
       return JSON.stringify(data);
+    }
+    return String(data);
+  };
+
+  const renderScheduleDataPreview = (data) => {
+    if (!data) return "—";
+    if (Array.isArray(data)) {
+      return data.join(", ");
     }
     return String(data);
   };
@@ -133,41 +145,52 @@ export function CreateActivityScreen() {
     <>
       <Text style={styles.reviewHeader}>Review</Text>
 
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>Title</Text>
-        <Text style={styles.reviewValue}>{title || "—"}</Text>
-      </View>
+      <View style={styles.reviewCard}>
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Title</Text>
+          <Text style={styles.reviewValue}>{title || "—"}</Text>
+        </View>
 
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>Description</Text>
-        <Text style={styles.reviewValue}>{description || "—"}</Text>
-      </View>
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Description</Text>
+          <Text style={styles.reviewValue}>{description || "—"}</Text>
+        </View>
 
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>Priority</Text>
-        <Text style={styles.reviewValue}>{priority}</Text>
-      </View>
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Priority</Text>
+          <Text style={styles.reviewValue}>{priority}</Text>
+        </View>
 
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>Type</Text>
-        <Text style={styles.reviewValue}>{type}</Text>
-      </View>
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Type</Text>
+          <Text style={styles.reviewValue}>{type}</Text>
+        </View>
 
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>Type Details</Text>
-        <Text style={styles.reviewValue}>
-          {renderTypeDataPreview(typeData)}
-        </Text>
-      </View>
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Type Details</Text>
+          <Text style={styles.reviewValue}>
+            {renderTypeDataPreview(typeData)}
+          </Text>
+        </View>
 
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>Schedule</Text>
-        <Text style={styles.reviewValue}>{schedule}</Text>
-      </View>
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Schedule</Text>
+          <Text style={styles.reviewValue}>{schedule}</Text>
+        </View>
 
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>Time</Text>
-        <Text style={styles.reviewValue}>{time ? formatTime(time) : "—"}</Text>
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Schedule Value</Text>
+          <Text style={styles.reviewValue}>
+            {renderScheduleDataPreview(scheduleData)}
+          </Text>
+        </View>
+
+        <View style={styles.reviewRow}>
+          <Text style={styles.reviewLabel}>Time</Text>
+          <Text style={styles.reviewValue}>
+            {time ? formatTime(time) : "—"}
+          </Text>
+        </View>
       </View>
     </>
   );
@@ -250,11 +273,16 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
   },
-  reviewRow: {
+  reviewCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: theme.borderRadius.md,
     padding: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
+    gap: theme.spacing.xs,
+  },
+  reviewRow: {
+    paddingVertical: theme.spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   reviewLabel: {
     fontSize: theme.fontSizes.xs,
