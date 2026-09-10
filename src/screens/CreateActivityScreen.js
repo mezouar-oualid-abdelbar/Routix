@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Text,
   StyleSheet,
@@ -12,75 +12,78 @@ import { InfoForm } from "../components/InfoForm";
 import { TypeForm } from "../components/TypeForm";
 import { ScheduleForm } from "../components/ScheduleForm";
 import { Time } from "../components/inputs/Time";
-import { FormatTime as formatTime } from "../utiles/FormatTime";
+import { FormatTime as formatTime } from "../helpers/FormatTime";
+import useCreateActivityDraft from "../store/createActivityDraft";
+import useActivityStore from "../store/activityStore";
+import { validateStep } from "../utils/validateActivity";
 
-export function CreateActivityScreen() {
-  const [step, setStep] = useState(1);
+const switchPriority = [
+  { label: "Low", value: "low" },
+  { label: "Medium", value: "medium" },
+  { label: "High", value: "high" },
+];
 
-  // Info Step
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("low");
-  const switchPriority = [
-    { label: "Low", value: "low" },
-    { label: "Medium", value: "medium" },
-    { label: "High", value: "high" },
-  ];
+const switchType = [
+  { label: "Normal", value: "normal" },
+  { label: "Timed", value: "timed" },
+  { label: "Follow up", value: "follow_up" },
+  { label: "Multi activities", value: "multi_activities" },
+];
 
-  // Type Step
-  const [type, setType] = useState("normal");
-  const [typeData, setTypeData] = useState(null);
-  const switchType = [
-    { label: "Normal", value: "normal" },
-    { label: "Timed", value: "timed" },
-    { label: "Follow up", value: "follow_up" },
-    { label: "Multi activities", value: "multi_activities" },
-  ];
+const switchSchedule = [
+  { label: "Normal", value: "normal" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Interval", value: "interval" },
+];
 
-  // Schedule Step
-  const [schedule, setSchedule] = useState("normal");
-  const [scheduleData, setScheduleData] = useState(null);
-  const switchSchedule = [
-    { label: "Normal", value: "normal" },
-    { label: "Weekly", value: "weekly" },
-    { label: "Interval", value: "interval" },
-  ];
-
-  // Time Step
-  const [time, setTime] = useState(null);
-
+export function CreateActivityScreen({ navigation }) {
+  //
+  // local storage for  in-progress form
+  //
+  const draft = useCreateActivityDraft();
+  const createActivity = useActivityStore((state) => state.createActivity);
+  //
+  //
+  //
   const goNext = () => {
-    if (step === 1 && !title.trim()) return;
-    setStep((prev) => prev + 1);
+    const { isValid } = validateStep(draft.step, draft);
+    if (!isValid) return; // later: show errors
+    draft.setField("step", draft.step + 1);
   };
 
   const goBack = () => {
-    setStep((prev) => prev - 1);
+    draft.setField("step", draft.step - 1);
   };
 
-  const submitActivity = () => {
-    console.log("Submitting:", {
-      title,
-      description,
-      priority,
-      type,
-      typeData,
-      schedule,
-      scheduleData,
-      time,
+  const handleSubmit = async () => {
+    const { isValid } = validateStep(draft.step, draft);
+    if (!isValid) return;
+
+    await createActivity({
+      title: draft.title,
+      description: draft.description,
+      priority: draft.priority,
+      type: draft.type,
+      typeData: draft.typeData,
+      schedule: draft.schedule,
+      scheduleData: draft.scheduleData,
+      time: draft.time,
     });
-    // DB insert wiring comes next
+
+    draft.resetDraft();
+    navigation.goBack();
   };
 
-  const renderStepDots = () => {
-    return (
-      <View style={styles.dotsRow}>
-        {[1, 2, 3, 4].map((n) => (
-          <View key={n} style={[styles.dot, n === step && styles.dotActive]} />
-        ))}
-      </View>
-    );
-  };
+  const renderStepDots = () => (
+    <View style={styles.dotsRow}>
+      {[1, 2, 3, 4].map((n) => (
+        <View
+          key={n}
+          style={[styles.dot, n === draft.step && styles.dotActive]}
+        />
+      ))}
+    </View>
+  );
 
   const renderTypeDataPreview = (data) => {
     if (!data) return "—";
@@ -98,46 +101,44 @@ export function CreateActivityScreen() {
 
   const renderScheduleDataPreview = (data) => {
     if (!data) return "—";
-    if (Array.isArray(data)) {
-      return data.join(", ");
-    }
+    if (Array.isArray(data)) return data.join(", ");
     return String(data);
   };
 
   const renderStep1 = () => (
     <InfoForm
-      title={title}
-      setTitle={setTitle}
-      discribtion={description}
-      setDiscribtion={setDescription}
-      priority={priority}
-      setPriority={setPriority}
+      title={draft.title}
+      setTitle={(v) => draft.setField("title", v)}
+      discribtion={draft.description}
+      setDiscribtion={(v) => draft.setField("description", v)}
+      priority={draft.priority}
+      setPriority={(v) => draft.setField("priority", v)}
       switchPriority={switchPriority}
     />
   );
 
   const renderStep2 = () => (
     <TypeForm
-      type={type}
+      type={draft.type}
       switchType={switchType}
-      setType={setType}
-      typeData={typeData}
-      setTypeData={setTypeData}
+      setType={(v) => draft.setField("type", v)}
+      typeData={draft.typeData}
+      setTypeData={(v) => draft.setField("typeData", v)}
     />
   );
 
   const renderStep3 = () => (
     <>
       <ScheduleForm
-        schedule={schedule}
+        schedule={draft.schedule}
         switchSchedule={switchSchedule}
-        setSchedule={setSchedule}
-        scheduleData={scheduleData}
-        setScheduleData={setScheduleData}
+        setSchedule={(v) => draft.setField("schedule", v)}
+        scheduleData={draft.scheduleData}
+        setScheduleData={(v) => draft.setField("scheduleData", v)}
       />
 
       <Text style={styles.label}>Time</Text>
-      <Time time={time} setTime={setTime} />
+      <Time time={draft.time} setTime={(v) => draft.setField("time", v)} />
     </>
   );
 
@@ -148,47 +149,47 @@ export function CreateActivityScreen() {
       <View style={styles.reviewCard}>
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Title</Text>
-          <Text style={styles.reviewValue}>{title || "—"}</Text>
+          <Text style={styles.reviewValue}>{draft.title || "—"}</Text>
         </View>
 
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Description</Text>
-          <Text style={styles.reviewValue}>{description || "—"}</Text>
+          <Text style={styles.reviewValue}>{draft.description || "—"}</Text>
         </View>
 
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Priority</Text>
-          <Text style={styles.reviewValue}>{priority}</Text>
+          <Text style={styles.reviewValue}>{draft.priority}</Text>
         </View>
 
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Type</Text>
-          <Text style={styles.reviewValue}>{type}</Text>
+          <Text style={styles.reviewValue}>{draft.type}</Text>
         </View>
 
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Type Details</Text>
           <Text style={styles.reviewValue}>
-            {renderTypeDataPreview(typeData)}
+            {renderTypeDataPreview(draft.typeData)}
           </Text>
         </View>
 
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Schedule</Text>
-          <Text style={styles.reviewValue}>{schedule}</Text>
+          <Text style={styles.reviewValue}>{draft.schedule}</Text>
         </View>
 
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Schedule Value</Text>
           <Text style={styles.reviewValue}>
-            {renderScheduleDataPreview(scheduleData)}
+            {renderScheduleDataPreview(draft.scheduleData)}
           </Text>
         </View>
 
         <View style={styles.reviewRow}>
           <Text style={styles.reviewLabel}>Time</Text>
           <Text style={styles.reviewValue}>
-            {time ? formatTime(time) : "—"}
+            {draft.time ? formatTime(draft.time) : "—"}
           </Text>
         </View>
       </View>
@@ -204,25 +205,25 @@ export function CreateActivityScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {step === 1 && renderStep1()}
-        {step === 2 && renderStep2()}
-        {step === 3 && renderStep3()}
-        {step === 4 && renderStep4()}
+        {draft.step === 1 && renderStep1()}
+        {draft.step === 2 && renderStep2()}
+        {draft.step === 3 && renderStep3()}
+        {draft.step === 4 && renderStep4()}
       </ScrollView>
 
       <View style={styles.navRow}>
-        {step > 1 && (
+        {draft.step > 1 && (
           <TouchableOpacity style={styles.backButton} onPress={goBack}>
             <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
         )}
 
-        {step < 4 ? (
+        {draft.step < 4 ? (
           <TouchableOpacity style={styles.nextButton} onPress={goNext}>
             <Text style={styles.nextButtonText}>Next</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.nextButton} onPress={submitActivity}>
+          <TouchableOpacity style={styles.nextButton} onPress={handleSubmit}>
             <Text style={styles.nextButtonText}>Create</Text>
           </TouchableOpacity>
         )}
@@ -238,9 +239,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingTop: theme.spacing.lg,
   },
-  scrollContent: {
-    paddingBottom: theme.spacing.lg,
-  },
+  scrollContent: { paddingBottom: theme.spacing.lg },
   header: {
     fontSize: theme.fontSizes.xl,
     fontWeight: theme.fontWeights.bold,
@@ -258,9 +257,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: theme.colors.surface,
   },
-  dotActive: {
-    backgroundColor: theme.colors.primary,
-  },
+  dotActive: { backgroundColor: theme.colors.primary },
   label: {
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,

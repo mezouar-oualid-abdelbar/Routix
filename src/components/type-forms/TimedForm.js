@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TimerPickerModal } from "react-native-timer-picker";
-import theme from "../styles/theme";
+import theme from "../../styles/theme";
 
 export function TimedForm({ typeData, setTypeData }) {
   const [showPicker, setShowPicker] = useState(false);

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TimerPickerModal } from "react-native-timer-picker";
 import theme from "../../styles/theme";
-import { FormatTime as formatTime } from "../../utiles/FormatTime";
+import { FormatTime as formatTime } from "../../helpers/FormatTime";
 
 export function Time({ time, setTime }) {
   const [showTime, setShowTime] = useState(false);

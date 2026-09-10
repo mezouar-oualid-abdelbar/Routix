@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { Text, StyleSheet } from "react-native";
 import SwitchSelector from "react-native-switch-selector";
-import TimedForm from "../components/TimedForm";
-import MultiActivitiesForm from "../components/MultiActivitiesForm";
-import FollowUpForm from "../components/FollowUpForm";
+import TimedForm from "./type-forms/TimedForm";
+import MultiActivitiesForm from "./type-forms/MultiActivitiesForm";
+import FollowUpForm from "./type-forms/FollowUpForm";
 import theme from "../styles/theme";
 
 export function TypeForm({ type, switchType, setType, typeData, setTypeData }) {

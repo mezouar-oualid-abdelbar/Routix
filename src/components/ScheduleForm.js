@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Text, StyleSheet } from "react-native";
 import SwitchSelector from "react-native-switch-selector";
-import WeeklyForm from "../components/WeeklyForm";
-import IntervalForm from "../components/IntervalForm";
+import WeeklyForm from "./schedule-forms/WeeklyForm";
+import IntervalForm from "./schedule-forms/IntervalForm";
 import theme from "../styles/theme";
 
 export function ScheduleForm({

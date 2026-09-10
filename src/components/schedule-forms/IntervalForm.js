@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
-import theme from "../styles/theme";
+import theme from "../../styles/theme";
 
 export function IntervalForm({ scheduleData, setScheduleData }) {
   const intervalDays = scheduleData != null ? String(scheduleData) : "2";

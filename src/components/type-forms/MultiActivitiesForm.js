@@ -10,7 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import SwitchSelector from "react-native-switch-selector";
 import { TimerPicker } from "react-native-timer-picker";
-import theme from "../styles/theme";
+import theme from "../../styles/theme";
 
 export function MultiActivitiesForm({ typeData, setTypeData }) {
   const tasks = Array.isArray(typeData) ? typeData : [];

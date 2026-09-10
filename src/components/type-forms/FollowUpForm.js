@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import theme from "../styles/theme";
+import theme from "../../styles/theme";
 
 export function FollowUpForm({ typeData, setTypeData }) {
   const steps = Array.isArray(typeData) ? typeData : [];

@@ -53,34 +53,11 @@ export function InfoForm({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.lg,
-  },
-  scrollContent: {
-    paddingBottom: theme.spacing.lg,
-  },
   header: {
     fontSize: theme.fontSizes.xl,
     fontWeight: theme.fontWeights.bold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
-  },
-  dotsRow: {
-    flexDirection: "row",
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.md,
-  },
-  dot: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.surface,
-  },
-  dotActive: {
-    backgroundColor: theme.colors.primary,
   },
   label: {
     fontSize: theme.fontSizes.sm,
@@ -103,72 +80,5 @@ const styles = StyleSheet.create({
   },
   switch: {
     marginBottom: theme.spacing.sm,
-  },
-  timeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderWidth: 1,
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-  },
-  timeButtonLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-  },
-  timeButtonText: {
-    color: theme.colors.text,
-    fontSize: theme.fontSizes.md,
-  },
-  reviewHeader: {
-    fontSize: theme.fontSizes.lg,
-    fontWeight: theme.fontWeights.bold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-  },
-  reviewRow: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  reviewLabel: {
-    fontSize: theme.fontSizes.xs,
-    color: theme.colors.textSecondary,
-  },
-  reviewValue: {
-    fontSize: theme.fontSizes.md,
-    color: theme.colors.text,
-    marginTop: 2,
-  },
-  navRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  backButton: {
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  backButtonText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.fontSizes.md,
-  },
-  nextButton: {
-    flex: 1,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.sm,
-    alignItems: "center",
-  },
-  nextButtonText: {
-    color: theme.colors.background,
-    fontWeight: theme.fontWeights.bold,
-    fontSize: theme.fontSizes.md,
   },
 });

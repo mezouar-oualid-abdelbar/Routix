@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import theme from "../styles/theme";
+import theme from "../../styles/theme";
 
 const DAYS = [
   { label: "S", value: "sunday" },
