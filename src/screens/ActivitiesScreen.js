@@ -30,7 +30,7 @@ export default function ActivitiesScreen({ navigation }) {
         style={styles.list}
         data={activities}
         renderItem={({ item }) => (
-          <ActivityCard activity={item} onDelete={deleteActivity} />
+          <ActivityCard activity={item}  onPress={()=>{navigation.navigate("TimedActivityScreen")}} />
         )}
         keyExtractor={(item) => String(item.id)}
       />

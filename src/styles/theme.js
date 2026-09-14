@@ -1,22 +1,23 @@
 const theme = {
   colors: {
-    background: "#1E2824",
-    surface: "#2A362E",
-    primary: "#6FCF97", // softer green, not neon
-    secondary: "#57805f",
+    background: "#F5F8F6",
+    surface: "#FFFFFF",
 
-    text: "#F2F2F2", // light text for dark background
-    textSecondary: "#A0A8A3",
-    textInverse: "#1E2824",
+    primary: "#4FAF78",
+    secondary: "#6F9678",
 
-    success: "#2ecc71",
-    error: "#e74c3c",
-    warning: "#f1c40f",
-    info: "#3498db",
+    text: "#1E2824",
+    textSecondary: "#68736D",
+    textInverse: "#FFFFFF",
 
-    border: "#3a4a3f",
-    disabled: "#6b6b6b",
-    overlay: "rgba(0,0,0,0.5)",
+    success: "#27AE60",
+    error: "#D64545",
+    warning: "#D99A00",
+    info: "#3182CE",
+
+    border: "#D9E2DC",
+    disabled: "#A7B0AA",
+    overlay: "rgba(0,0,0,0.35)",
   },
 
   spacing: {
@@ -47,7 +48,7 @@ const theme = {
     sm: 4,
     md: 8,
     lg: 16,
-    round: 999, // fully rounded (circular buttons/avatars)
+    round: 999,
   },
 };
 
