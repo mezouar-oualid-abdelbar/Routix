@@ -30,7 +30,7 @@ export default function ActivitiesScreen({ navigation }) {
         style={styles.list}
         data={activities}
         renderItem={({ item }) => (
-          <ActivityCard activity={item}  onPress={()=>{navigation.navigate("MultiActivityScreen")}} />
+          <ActivityCard activity={item}  onPress={()=>{navigation.navigate("FollowUpActivityScreen")}} />
         )}
         keyExtractor={(item) => String(item.id)}
       />
