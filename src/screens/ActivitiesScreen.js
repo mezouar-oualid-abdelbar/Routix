@@ -15,6 +15,23 @@ import useActivityStore from "../store/activityStore";
 export default function ActivitiesScreen({ navigation }) {
   const activities = useActivityStore((state) => state.activities);
   const deleteActivity = useActivityStore((state) => state.deleteActivity);
+
+  const navigateActivity = (activityType) => {
+    switch (activityType) {
+      case "multi_activities":
+        navigation.navigate("MultiActivityScreen");
+        break;
+      case "timed":
+        navigation.navigate("TimedActivityScreen");
+        break;
+      case "follow-up":
+        navigation.navigate("FollowUpActivityScreen");
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Activities</Text>
@@ -30,7 +47,7 @@ export default function ActivitiesScreen({ navigation }) {
         style={styles.list}
         data={activities}
         renderItem={({ item }) => (
-          <ActivityCard activity={item}  onPress={()=>{navigation.navigate("FollowUpActivityScreen")}} />
+          <ActivityCard activity={item} onPress={() => navigateActivity(item.type)} />
         )}
         keyExtractor={(item) => String(item.id)}
       />
