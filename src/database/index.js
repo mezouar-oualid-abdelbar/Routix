@@ -15,6 +15,7 @@ export {
   updateActivityLog,
   getLogsForDate,
   getLogsInRange,
+  getLastCompletedDate,
   getLastCompletedDates,
   getActivityHistory,
 } from "./activityLogs";

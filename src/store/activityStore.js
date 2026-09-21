@@ -9,6 +9,20 @@ import {
 import { getLogsForDate, getLastCompletedDates } from "../database/activityLogs";
 import { todayKey } from "../utils/dates";
 import { buildTodayEntries } from "../utils/todayEntries";
+import {
+  cancelActivityNotifications,
+  syncActivityNotifications,
+} from "../services/notifications/activityNotifications";
+
+// Notification sync must never break the database flow (e.g. platforms
+// without notification support), so failures are contained here.
+async function syncNotificationsQuietly(task) {
+  try {
+    await task();
+  } catch (error) {
+    console.warn("Activity notification sync failed:", error);
+  }
+}
 
 const useActivityStore = create((set, get) => ({
   activities: [],
@@ -37,6 +51,7 @@ const useActivityStore = create((set, get) => ({
   softDeleteActivity: async (activityId) => {
     await softDeleteActivityInDb(activityId);
     await get().loadActivities();
+    await syncNotificationsQuietly(() => cancelActivityNotifications(activityId));
   },
 
   getActivityById: async (activityId) => {
@@ -63,6 +78,10 @@ const useActivityStore = create((set, get) => ({
     // Refresh Zustand state
     await get().loadActivities();
 
+    await syncNotificationsQuietly(() =>
+      syncActivityNotifications({ ...activity, id: newActivityId.id }),
+    );
+
     // Return the newly created activity
     return newActivityId;
   },
@@ -84,6 +103,11 @@ const useActivityStore = create((set, get) => ({
 
     // Refresh Zustand state
     await get().loadActivities();
+
+    await syncNotificationsQuietly(async () => {
+      const fresh = await getActivityByIdFromDb(activity.id);
+      await syncActivityNotifications(fresh);
+    });
   },
 }));
 
