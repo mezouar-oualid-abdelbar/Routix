@@ -1,13 +1,21 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Text, StyleSheet } from "react-native";
-import SwitchSelector from "react-native-switch-selector";
 import TimedForm from "./type-forms/TimedForm";
 import MultiActivitiesForm from "./type-forms/MultiActivitiesForm";
 import FollowUpForm from "./type-forms/FollowUpForm";
 import theme from "../styles/theme";
+import { AppSwitch } from "./common/AppSwitch";
 
 export function TypeForm({ type, switchType, setType, typeData, setTypeData }) {
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
+    // Skip the initial mount so prefilled data (edit flow) is preserved;
+    // only clear when the user actually switches the type.
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setTypeData(null);
   }, [type]);
 
@@ -26,23 +34,14 @@ export function TypeForm({ type, switchType, setType, typeData, setTypeData }) {
     }
   };
 
-  const initialTypeIndex = Math.max(
-    0,
-    switchType ? switchType.findIndex((item) => item.value === type) : 0,
-  );
-
   return (
     <>
       <Text style={styles.header}>Type</Text>
 
-      <SwitchSelector
+      <AppSwitch
         options={switchType}
-        initial={initialTypeIndex}
+        value={type}
         onPress={(value) => setType(value)}
-        buttonColor={theme.colors.primary}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.textSecondary}
-        selectedTextStyle={{ color: theme.colors.textInverse }}
         style={styles.switch}
       />
 

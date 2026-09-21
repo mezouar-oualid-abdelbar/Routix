@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import theme from "../../styles/theme";
+import { FormCard } from "../common/FormCard";
 
 export function IntervalForm({ scheduleData, setScheduleData }) {
   const intervalDays = scheduleData != null ? String(scheduleData) : "2";
@@ -11,7 +12,7 @@ export function IntervalForm({ scheduleData, setScheduleData }) {
   };
 
   return (
-    <View style={styles.container}>
+    <FormCard>
       <Text style={styles.label}>Repeat every</Text>
 
       <View style={styles.row}>
@@ -24,17 +25,11 @@ export function IntervalForm({ scheduleData, setScheduleData }) {
         />
         <Text style={styles.unit}>{intervalDays === "1" ? "day" : "days"}</Text>
       </View>
-    </View>
+    </FormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
   label: {
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,

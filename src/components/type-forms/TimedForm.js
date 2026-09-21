@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TimerPickerModal } from "react-native-timer-picker";
 import theme from "../../styles/theme";
+import { formatDuration } from "../../utils/formatTime";
+import { baseTimerPickerModalStyles } from "../../styles/timerPicker";
+import { FormCard } from "../common/FormCard";
 
 export function TimedForm({ typeData, setTypeData }) {
   const [showPicker, setShowPicker] = useState(false);
@@ -10,17 +13,8 @@ export function TimedForm({ typeData, setTypeData }) {
   // Fallback to default state if typeData hasn't been set yet
   const duration = typeData || { hours: 1, minutes: 0 };
 
-  const formatDuration = (dur) => {
-    if (!dur) return "0m";
-    const { hours, minutes } = dur;
-    const parts = [];
-    if (hours) parts.push(`${hours}h`);
-    if (minutes) parts.push(`${minutes}m`);
-    return parts.length > 0 ? parts.join(" ") : "0m";
-  };
-
   return (
-    <View style={styles.container}>
+    <FormCard>
       <View style={styles.labelRow}>
         <Ionicons
           name="time-outline"
@@ -71,8 +65,7 @@ export function TimedForm({ typeData, setTypeData }) {
         onCancel={() => setShowPicker(false)}
         closeOnOverlayPress
         styles={{
-          theme: "dark",
-          backgroundColor: theme.colors.surface,
+          ...baseTimerPickerModalStyles,
           pickerContainer: {
             paddingHorizontal: theme.spacing.xl,
             paddingVertical: theme.spacing.md,
@@ -80,63 +73,24 @@ export function TimedForm({ typeData, setTypeData }) {
           pickerItemContainer: {
             height: 50,
           },
-          pickerItem: {
-            color: theme.colors.textSecondary,
-            fontSize: theme.fontSizes.lg,
-          },
           disabledPickerItem: {
             color: theme.colors.disabled,
           },
-          selectedPickerItem: {
-            color: theme.colors.text,
-            fontWeight: theme.fontWeights.bold,
-            fontSize: theme.fontSizes.xl,
-          },
           pickerLabel: {
-            color: theme.colors.primary,
-            fontSize: theme.fontSizes.sm,
+            ...baseTimerPickerModalStyles.pickerLabel,
             fontWeight: theme.fontWeights.medium,
           },
           pickerLabelContainer: {
             marginLeft: 4,
           },
           pickerLabelGap: 10,
-          modalTitle: {
-            color: theme.colors.text,
-            fontSize: theme.fontSizes.lg,
-            fontWeight: theme.fontWeights.bold,
-          },
-          confirmButton: {
-            color: theme.colors.background,
-            backgroundColor: theme.colors.primary,
-            borderRadius: theme.borderRadius.md,
-            paddingVertical: theme.spacing.sm,
-            paddingHorizontal: theme.spacing.lg,
-            overflow: "hidden",
-            fontWeight: theme.fontWeights.bold,
-          },
-          cancelButton: {
-            color: theme.colors.textSecondary,
-            paddingVertical: theme.spacing.sm,
-            paddingHorizontal: theme.spacing.lg,
-          },
-          container: {
-            backgroundColor: theme.colors.surface,
-            borderRadius: theme.borderRadius.lg,
-          },
         }}
       />
-    </View>
+    </FormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
   labelRow: {
     flexDirection: "row",
     alignItems: "center",

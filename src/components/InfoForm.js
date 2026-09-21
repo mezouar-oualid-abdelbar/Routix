@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, TextInput, StyleSheet } from "react-native";
-import SwitchSelector from "react-native-switch-selector";
 import theme from "../styles/theme";
+import { AppSwitch } from "./common/AppSwitch";
 
 export function InfoForm({
   title,
@@ -12,11 +12,6 @@ export function InfoForm({
   priority,
   setPriority,
 }) {
-  // Find initial index matching current priority value
-  const initialPriorityIndex = switchPriority.findIndex(
-    (item) => item.value === priority,
-  );
-
   return (
     <>
       <Text style={styles.header}>info</Text>
@@ -38,14 +33,10 @@ export function InfoForm({
         multiline
       />
       <Text style={styles.label}>Priority</Text>
-      <SwitchSelector
+      <AppSwitch
         options={switchPriority}
-        initial={initialPriorityIndex >= 0 ? initialPriorityIndex : 0}
+        value={priority}
         onPress={(value) => setPriority(value)}
-        buttonColor={theme.colors.primary}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.textSecondary}
-        selectedTextStyle={{ color: theme.colors.textInverse }}
         style={styles.switch}
       />
     </>

@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Text, StyleSheet } from "react-native";
-import SwitchSelector from "react-native-switch-selector";
 import WeeklyForm from "./schedule-forms/WeeklyForm";
 import IntervalForm from "./schedule-forms/IntervalForm";
 import theme from "../styles/theme";
+import { AppSwitch } from "./common/AppSwitch";
 
 export function ScheduleForm({
   schedule,
@@ -13,7 +13,14 @@ export function ScheduleForm({
   setScheduleData,
 }) {
   // Reset schedule data whenever the schedule type changes
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
+    // Skip the initial mount so prefilled data (edit flow) is preserved.
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setScheduleData(null);
   }, [schedule]);
 
@@ -32,24 +39,13 @@ export function ScheduleForm({
     }
   };
 
-  const initialScheduleIndex = Math.max(
-    0,
-    switchSchedule
-      ? switchSchedule.findIndex((item) => item.value === schedule)
-      : 0,
-  );
-
   return (
     <>
       <Text style={styles.header}>Schedule</Text>
-      <SwitchSelector
+      <AppSwitch
         options={switchSchedule}
-        initial={initialScheduleIndex}
+        value={schedule}
         onPress={(value) => setSchedule(value)}
-        buttonColor={theme.colors.primary}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.textSecondary}
-        selectedTextStyle={{ color: theme.colors.textInverse }}
         style={styles.switch}
       />
 

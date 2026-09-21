@@ -9,8 +9,12 @@ class SplashScreen extends Component {
   state = {};
 
   async componentDidMount() {
-    await initDatabase();
-    await useActivityStore.getState().loadActivities();
+    try {
+      await initDatabase();
+      await useActivityStore.getState().loadActivities();
+    } catch (error) {
+      console.warn("Database init failed, opening app anyway:", error);
+    }
     this.props.navigation.replace("BottomTabNavigator");
   }
 

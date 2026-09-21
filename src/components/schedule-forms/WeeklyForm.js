@@ -1,16 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import theme from "../../styles/theme";
-
-const DAYS = [
-  { label: "S", value: "sunday" },
-  { label: "M", value: "monday" },
-  { label: "T", value: "tuesday" },
-  { label: "W", value: "wednesday" },
-  { label: "T", value: "thursday" },
-  { label: "F", value: "friday" },
-  { label: "S", value: "saturday" },
-];
+import { WEEK_DAYS } from "../../constants/activity";
+import { FormCard } from "../common/FormCard";
 
 export function WeeklyForm({ scheduleData, setScheduleData }) {
   const selectedDays = Array.isArray(scheduleData) ? scheduleData : [];
@@ -25,11 +17,11 @@ export function WeeklyForm({ scheduleData, setScheduleData }) {
   };
 
   return (
-    <View style={styles.container}>
+    <FormCard>
       <Text style={styles.label}>Repeat on</Text>
 
       <View style={styles.dayRow}>
-        {DAYS.map((day) => {
+        {WEEK_DAYS.map((day) => {
           const isSelected = selectedDays.includes(day.value);
           return (
             <TouchableOpacity
@@ -50,17 +42,11 @@ export function WeeklyForm({ scheduleData, setScheduleData }) {
       {selectedDays.length === 0 && (
         <Text style={styles.hint}>Select at least one day</Text>
       )}
-    </View>
+    </FormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
   label: {
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,

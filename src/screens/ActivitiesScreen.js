@@ -1,11 +1,10 @@
-import React, { Component } from "react";
+import React from "react";
 import {
-  Button,
   FlatList,
   StyleSheet,
   Text,
   TextInput,
-  View,
+  Button,
 } from "react-native";
 import theme from "../styles/theme";
 import ActivityCard from "../components/ActivityCard";
@@ -14,23 +13,6 @@ import useActivityStore from "../store/activityStore";
 
 export default function ActivitiesScreen({ navigation }) {
   const activities = useActivityStore((state) => state.activities);
-  const deleteActivity = useActivityStore((state) => state.deleteActivity);
-
-  const navigateActivity = (activityType) => {
-    switch (activityType) {
-      case "multi_activities":
-        navigation.navigate("MultiActivityScreen");
-        break;
-      case "timed":
-        navigation.navigate("TimedActivityScreen");
-        break;
-      case "follow-up":
-        navigation.navigate("FollowUpActivityScreen");
-        break;
-      default:
-        break;
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,7 +29,14 @@ export default function ActivitiesScreen({ navigation }) {
         style={styles.list}
         data={activities}
         renderItem={({ item }) => (
-          <ActivityCard activity={item} onPress={() => navigateActivity(item.type)} />
+          <ActivityCard
+            activity={item}
+            onPress={() =>
+              navigation.navigate("ActivityDetailScreen", {
+                activityId: item.id,
+              })
+            }
+          />
         )}
         keyExtractor={(item) => String(item.id)}
       />

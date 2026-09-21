@@ -20,6 +20,10 @@
     "web": {
       "favicon": "./src/assets/favicon.png"
     },
-    "plugins": ["expo-status-bar", "expo-sqlite"]
+    "plugins": [
+      "expo-status-bar",
+      "expo-sqlite",
+      "expo-font"
+    ]
   }
 }

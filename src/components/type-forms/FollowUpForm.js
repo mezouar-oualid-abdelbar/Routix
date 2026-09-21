@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import theme from "../../styles/theme";
+import { FormCard } from "../common/FormCard";
 
 export function FollowUpForm({ typeData, setTypeData }) {
   const steps = Array.isArray(typeData) ? typeData : [];
@@ -29,7 +30,7 @@ export function FollowUpForm({ typeData, setTypeData }) {
   };
 
   return (
-    <View style={styles.container}>
+    <FormCard>
       <View style={styles.headerRow}>
         <Text style={styles.header}>Steps</Text>
         <Text style={styles.count}>{steps.length}</Text>
@@ -83,17 +84,11 @@ export function FollowUpForm({ typeData, setTypeData }) {
           Add steps in order — you'll be reminded to move to the next one.
         </Text>
       )}
-    </View>
+    </FormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",

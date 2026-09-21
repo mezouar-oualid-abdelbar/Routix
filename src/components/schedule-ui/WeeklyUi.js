@@ -1,16 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import theme from "../../styles/theme";
-
-const DAYS = [
-  { label: "S", value: "sunday" },
-  { label: "M", value: "monday" },
-  { label: "T", value: "tuesday" },
-  { label: "W", value: "wednesday" },
-  { label: "T", value: "thursday" },
-  { label: "F", value: "friday" },
-  { label: "S", value: "saturday" },
-];
+import { WEEK_DAYS } from "../../constants/activity";
 
 export function WeeklyUi({ scheduleData }) {
   const selectedDays = Array.isArray(scheduleData) ? scheduleData : [];
@@ -20,7 +11,7 @@ export function WeeklyUi({ scheduleData }) {
       <Text style={styles.label}>Repeat on</Text>
 
       <View style={styles.dayRow}>
-        {DAYS.map((day) => {
+        {WEEK_DAYS.map((day) => {
           const isSelected = selectedDays.includes(day.value);
 
           return (

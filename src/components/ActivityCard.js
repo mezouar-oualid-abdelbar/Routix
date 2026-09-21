@@ -1,4 +1,4 @@
-import { Component } from "react";
+import React from "react";
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 
 import theme from "../styles/theme";
@@ -19,26 +19,22 @@ const renderScheduleUi = (schedule, scheduleData) => {
   }
 };
 
-class ActivityCard extends Component {
-  render() {
-    const { activity, onPress, onLongPress } = this.props;
-
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        onLongPress={onLongPress}
-        activeOpacity={0.8}
-      >
-        <View style={styles.card}>
-          {/* Activity title */}
-          <Text style={styles.title}>{activity.title}</Text>
-          <Text style={styles.title}>{activity.schedule}</Text>
-          {/* Schedule */}
-          {renderScheduleUi(activity.schedule, activity.scheduleData)}
-        </View>
-      </TouchableOpacity>
-    );
-  }
+export function ActivityCard({ activity, onPress, onLongPress }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onLongPress={onLongPress}
+      activeOpacity={0.8}
+    >
+      <View style={styles.card}>
+        {/* Activity title */}
+        <Text style={styles.title}>{activity.title}</Text>
+        <Text style={styles.title}>{activity.schedule}</Text>
+        {/* Schedule */}
+        {renderScheduleUi(activity.schedule, activity.scheduleData)}
+      </View>
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({

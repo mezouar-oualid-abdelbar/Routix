@@ -6,10 +6,19 @@ import ActivitiesScreen from "../screens/ActivitiesScreen";
 import StatsScreen from "../screens/StatsScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import theme from "../styles/theme";
-import { SafeAreaView } from "react-native-safe-area-context";
 import CreateActivityScreen from "../screens/CreateActivityScreen";
 
 const Tab = createBottomTabNavigator();
+
+function TabIcon({ focused, color, size, activeName, inactiveName }) {
+  return (
+    <Ionicons
+      name={focused ? activeName : inactiveName}
+      size={size}
+      color={color}
+    />
+  );
+}
 
 function BottomTabNavigator() {
   return (
@@ -29,10 +38,12 @@ function BottomTabNavigator() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              size={size}
+            <TabIcon
+              focused={focused}
               color={color}
+              size={size}
+              activeName="home"
+              inactiveName="home-outline"
             />
           ),
         }}
@@ -42,10 +53,12 @@ function BottomTabNavigator() {
         component={ActivitiesScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "list" : "list-outline"}
-              size={size}
+            <TabIcon
+              focused={focused}
               color={color}
+              size={size}
+              activeName="list"
+              inactiveName="list-outline"
             />
           ),
         }}
@@ -55,10 +68,12 @@ function BottomTabNavigator() {
         component={StatsScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "stats-chart" : "stats-chart-outline"}
-              size={size}
+            <TabIcon
+              focused={focused}
               color={color}
+              size={size}
+              activeName="stats-chart"
+              inactiveName="stats-chart-outline"
             />
           ),
         }}
@@ -68,10 +83,12 @@ function BottomTabNavigator() {
         component={SettingsScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "settings" : "settings-outline"}
-              size={size}
+            <TabIcon
+              focused={focused}
               color={color}
+              size={size}
+              activeName="settings"
+              inactiveName="settings-outline"
             />
           ),
         }}

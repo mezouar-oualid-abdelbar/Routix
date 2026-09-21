@@ -8,9 +8,11 @@ import {
   Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import SwitchSelector from "react-native-switch-selector";
 import { TimerPicker } from "react-native-timer-picker";
 import theme from "../../styles/theme";
+import { AppSwitch } from "../common/AppSwitch";
+import { FormCard } from "../common/FormCard";
+import { MULTI_TASK_TYPE_OPTIONS } from "../../constants/activity";
 
 export function MultiActivitiesForm({ typeData, setTypeData }) {
   const tasks = Array.isArray(typeData) ? typeData : [];
@@ -23,11 +25,6 @@ export function MultiActivitiesForm({ typeData, setTypeData }) {
     minutes: 30,
     seconds: 0,
   });
-
-  const switchType = [
-    { label: "Normal", value: "normal" },
-    { label: "Timed", value: "timed" },
-  ];
 
   const handleSave = () => {
     if (!activityTitle.trim()) return;
@@ -102,14 +99,10 @@ export function MultiActivitiesForm({ typeData, setTypeData }) {
             onChangeText={setActivityTitle}
           />
 
-          <SwitchSelector
-            options={switchType}
-            initial={0}
+          <AppSwitch
+            options={MULTI_TASK_TYPE_OPTIONS}
+            value={type}
             onPress={(value) => setType(value)}
-            buttonColor={theme.colors.primary}
-            backgroundColor={theme.colors.surface}
-            textColor={theme.colors.textSecondary}
-            selectedTextStyle={{ color: theme.colors.textInverse }}
             style={styles.switch}
           />
 
@@ -133,7 +126,7 @@ export function MultiActivitiesForm({ typeData, setTypeData }) {
   );
 
   return (
-    <View style={styles.container}>
+    <FormCard>
       <View style={styles.headerRow}>
         <Text style={styles.header}>Activities</Text>
         <Text style={styles.count}>{tasks.length}</Text>
@@ -180,17 +173,11 @@ export function MultiActivitiesForm({ typeData, setTypeData }) {
       </TouchableOpacity>
 
       {renderModal()}
-    </View>
+    </FormCard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",

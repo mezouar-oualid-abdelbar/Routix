@@ -1,82 +1,75 @@
 import { create } from "zustand";
 import {
-  getDb,
-  deleteActivity as deleteActivityFromDb,
+  getActivities,
+  getActivityById as getActivityByIdFromDb,
   createActivity as createActivityFromDb,
-  createTimedTask as createTimedTaskFromDb,
-  createFollowUpTask as createFollowUpTaskFromDb,
-  createMultiTasks as createMultiTasksFromDb,
-  createWeeklySchedule as createWeeklyScheduleFromDb,
-  createIntervalSchedule as createIntervalScheduleFromDb,
+  updateActivity as updateActivityInDb,
+  updateActivityStatus as updateActivityStatusInDb,
+  softDeleteActivity as softDeleteActivityInDb,
 } from "../api/database";
 
 const useActivityStore = create((set, get) => ({
   activities: [],
 
   loadActivities: async () => {
-    const result = await getDb().getAllAsync("SELECT * FROM activities");
-
-    set({ activities: result });
+    set({ activities: await getActivities() });
   },
 
-  deleteActivity: async (activity) => {
-    await deleteActivityFromDb(activity);
+  softDeleteActivity: async (activityId) => {
+    await softDeleteActivityInDb(activityId);
+    await get().loadActivities();
+  },
+
+  getActivityById: async (activityId) => {
+    const cached = get().activities.find(
+      (activity) => String(activity.id) === String(activityId),
+    );
+    if (cached) return cached;
+    return getActivityByIdFromDb(activityId);
+  },
+
+  setActivityStatus: async (activity, status) => {
+    await updateActivityStatusInDb(activity.id, status);
     await get().loadActivities();
   },
 
   createActivity: async (activity) => {
-    // 1. Create the main activity
+    // Persist the full activity: info + type data + schedule data + time.
     const newActivityId = await createActivityFromDb({
       title: activity.title,
-      discribtion: activity.description,
+      description: activity.description,
       priority: activity.priority,
       type: activity.type,
-      schedul: activity.schedule,
+      typeData: activity.typeData,
+      schedule: activity.schedule,
+      scheduleData: activity.scheduleData,
+      time: activity.time,
     });
 
-    // // 2. Create the activity type data
-    // switch (activity.type) {
-    //   case "timed":
-    //     await createTimedTaskFromDb(newActivityId.id, activity.typeData);
-    //     break;
-
-    //   case "follow_up":
-    //     await createFollowUpTaskFromDb(newActivityId.id, activity.typeData);
-    //     break;
-
-    //   case "multi_activities":
-    //     await createMultiTasksFromDb(newActivityId.id, activity.typeData);
-    //     break;
-
-    //   default:
-    //     break;
-    // }
-
-    // 3. Create the schedule
-    // switch (activity.schedule) {
-    //   case "weekly":
-    //     await createWeeklyScheduleFromDb(
-    //       newActivityId.id,
-    //       activity.scheduleData,
-    //     );
-    //     break;
-
-    //   case "interval":
-    //     await createIntervalScheduleFromDb(
-    //       newActivityId.id,
-    //       activity.scheduleData,
-    //     );
-    //     break;
-
-    //   default:
-    //     break;
-    // }
-
-    // 4. Refresh Zustand state
+    // Refresh Zustand state
     await get().loadActivities();
 
-    // 5. Return the newly created activity
+    // Return the newly created activity
     return newActivityId;
+  },
+
+  updateActivity: async (activity) => {
+    // Update the existing activity in place; the ID never changes.
+    await updateActivityInDb({
+      id: activity.id,
+      title: activity.title,
+      description: activity.description,
+      priority: activity.priority,
+      type: activity.type,
+      typeData: activity.typeData,
+      schedule: activity.schedule,
+      scheduleData: activity.scheduleData,
+      time: activity.time,
+      status: activity.status,
+    });
+
+    // Refresh Zustand state
+    await get().loadActivities();
   },
 }));
 
