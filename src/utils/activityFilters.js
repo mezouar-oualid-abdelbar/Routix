@@ -1,3 +1,5 @@
+import { diffDays, parseKey, startOfDay } from "./dates";
+
 const WEEKDAY_NAMES = [
   "sunday",
   "monday",
@@ -8,11 +10,13 @@ const WEEKDAY_NAMES = [
   "saturday",
 ];
 
-// An activity is due today when:
-// - schedule is "normal" (or unset)      -> always due
-// - schedule is "weekly"                 -> today is a selected day
-// - schedule is "interval" (every N days)-> N days passed since creation
-export function isDueToday(activity, now = new Date()) {
+// An activity is due on a given day when:
+// - schedule is "normal" (or unset)       -> always due
+// - schedule is "weekly"                  -> the day is selected
+// - schedule is "interval" (every N days) -> N+ days since the last
+//   completion (rolling anchor; falls back to creation), and it stays
+//   due until completed.
+export function isDueToday(activity, now = new Date(), lastDoneKey = null) {
   if (!activity) return false;
 
   switch (activity.schedule) {
@@ -29,18 +33,16 @@ export function isDueToday(activity, now = new Date()) {
     case "interval": {
       const every = parseInt(activity.scheduleData, 10);
       if (!Number.isFinite(every) || every <= 1) return true;
-      if (!activity.createdAt) return true;
 
-      const startOfDay = (date) => {
-        const copy = new Date(date);
-        copy.setHours(0, 0, 0, 0);
-        return copy;
-      };
-      const diffDays = Math.round(
-        (startOfDay(now) - startOfDay(activity.createdAt)) / 86400000,
-      );
-      if (diffDays < 0) return true;
-      return diffDays % every === 0;
+      const anchor =
+        lastDoneKey != null
+          ? parseKey(lastDoneKey)
+          : activity.createdAt
+            ? startOfDay(activity.createdAt)
+            : null;
+      if (!anchor) return true;
+
+      return diffDays(anchor, now) >= every;
     }
 
     default:

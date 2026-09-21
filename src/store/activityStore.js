@@ -4,15 +4,34 @@ import {
   getActivityById as getActivityByIdFromDb,
   createActivity as createActivityFromDb,
   updateActivity as updateActivityInDb,
-  updateActivityStatus as updateActivityStatusInDb,
   softDeleteActivity as softDeleteActivityInDb,
 } from "../api/database";
+import { getLogsForDate, getLastCompletedDates } from "../database/activityLogs";
+import { todayKey } from "../utils/dates";
+import { buildTodayEntries } from "../utils/todayEntries";
 
 const useActivityStore = create((set, get) => ({
   activities: [],
+  todayEntries: [],
 
   loadActivities: async () => {
     set({ activities: await getActivities() });
+  },
+
+  refreshToday: async (now = new Date()) => {
+    const activities = await getActivities();
+    const key = todayKey(now);
+    const logs = await getLogsForDate(key);
+    const logsByActivityId = {};
+    logs.forEach((log) => {
+      logsByActivityId[log.activityId] = log;
+    });
+    // Anchors exclude today: today's own completion must not hide the entry.
+    const lastDoneByActivityId = await getLastCompletedDates(key);
+    set({
+      activities,
+      todayEntries: buildTodayEntries(activities, logsByActivityId, now, lastDoneByActivityId),
+    });
   },
 
   softDeleteActivity: async (activityId) => {
@@ -26,11 +45,6 @@ const useActivityStore = create((set, get) => ({
     );
     if (cached) return cached;
     return getActivityByIdFromDb(activityId);
-  },
-
-  setActivityStatus: async (activity, status) => {
-    await updateActivityStatusInDb(activity.id, status);
-    await get().loadActivities();
   },
 
   createActivity: async (activity) => {

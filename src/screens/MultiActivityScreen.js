@@ -1,149 +1,249 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from "@expo/vector-icons";
 import theme from "../styles/theme";
 import { AppButton } from "../components/common/AppButton";
-import { formatCountdown } from "../utils/formatTime";
+import { CompletionView } from "../components/common/CompletionView";
+import { ExecutionShell } from "../components/execution/ExecutionShell";
+import useActivityStore from "../store/activityStore";
+import { useActivityLog } from "../hooks/useActivityLog";
+import { useTaskTimer } from "../hooks/useTaskTimer";
+import { todayKey } from "../utils/dates";
+import { LOG_STATUS } from "../constants/logStatus";
+import { formatCountdown, formatDuration } from "../utils/formatTime";
 
-const initialTasks = [
-    { id: "1", title: "task 1", time: 15, completed: false }, // stored as numeric seconds
-    { id: "2", title: "task 2", time: 30, completed: false },
-    { id: "3", title: "task 3", completed: false }, // Standard task (no time property)
-];
+function taskTotalSeconds(task) {
+  const d = task.duration ?? {};
+  return (
+    (d.hours ?? 0) * 3600 + (d.minutes ?? 0) * 60 + (d.seconds ?? 0)
+  );
+}
 
-export default function MultiActivityScreen() {
-  const [tasks, setTasks] = useState(initialTasks);
+function MultiTaskRow({
+  task,
+  elapsed,
+  running,
+  done,
+  onStart,
+  onTimerPause,
+  onDone,
+}) {
+  const timed = task.type === "timed";
+  const totalSeconds = taskTotalSeconds(task);
+  const { timeLeft, isRunning, start, pause, reset } = useTaskTimer();
 
-  // Find the first active task that has a time requirement
-  const currentTimedTask = tasks.find((task) => !task.completed && task.time);
+  // Hydrate from today's log whenever it changes and the timer is idle.
+  useEffect(() => {
+    if (!running) reset(Math.max(totalSeconds - elapsed, 0));
+  }, [elapsed, totalSeconds, running, reset]);
 
-  const [timeLeft, setTimeLeft] = useState(currentTimedTask ? currentTimedTask.time : 0);
-  const [isRunning, setIsRunning] = useState(true);
+  // Parent owns which task runs; follow the `running` flag.
+  useEffect(() => {
+    if (running && !isRunning) {
+      start({
+        onPersist: (secondsLeft) =>
+          onTimerPause(task.id, totalSeconds - secondsLeft),
+        onFinish: () => onTimerPause(task.id, totalSeconds),
+      });
+    } else if (!running && isRunning) {
+      pause();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
 
-  const handleTaskAction = (id) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id ? { ...task, completed: true } : task
-      )
-    );
+  const handleToggle = () => {
+    if (running) onTimerPause(task.id, totalSeconds - timeLeft);
+    onStart(running ? null : task.id);
   };
 
-  // Sync timeLeft whenever the active task changes
-  useEffect(() => {
-    if (currentTimedTask) {
-      setTimeLeft(currentTimedTask.time);
-      setIsRunning(true);
-    }
-  }, [currentTimedTask?.id]);
-
-  // =========================
-  // COUNTDOWN FOR TIMED TASKS
-  // =========================
-  useEffect(() => {
-    if (!currentTimedTask || !isRunning) return;
-
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsRunning(false);
-          // Auto-complete the timed task when time is up
-          handleTaskAction(currentTimedTask.id);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [currentTimedTask, isRunning]);
-
-  const pendingTasks = tasks.filter((task) => !task.completed);
+  const handleDone = () => {
+    pause();
+    onDone(task.id, totalSeconds - timeLeft);
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.header}>
-          Pending Tasks
+    <View style={[styles.taskRow, done && styles.taskDone]}>
+      <Ionicons
+        name={done ? "checkmark-circle" : timed ? "time-outline" : "ellipse-outline"}
+        size={20}
+        color={done ? theme.colors.primary : theme.colors.textSecondary}
+      />
+      <View style={styles.taskInfo}>
+        <Text style={[styles.taskTitle, done && styles.taskTitleDone]}>
+          {task.title}
         </Text>
-
-        {pendingTasks.map((task, index) => {
-          // Check if this is the active task with a timer
-          const isTimedActive = task.time && index === pendingTasks.findIndex(t => t.time);
-
-          return (
-            <View
-              key={task.id}
-              style={[
-                styles.taskRow,
-                isTimedActive && styles.taskRowActive,
-              ]}
-            >
-              <View style={styles.taskInfo}>
-                <Text style={styles.taskTitle}>
-                  {task.title}
-                </Text>
-
-                {task.time ? (
-                  <Text style={[styles.taskTime, isTimedActive && styles.taskTimeActive]}>
-                    {isTimedActive ? `Time Left: ${formatCountdown(timeLeft)}` : `Duration: ${task.time}s`}
-                  </Text>
-                ) : (
-                  <Text style={styles.taskStandard}>
-                    Standard Task
-                  </Text>
-                )}
-              </View>
-
-              <View style={styles.taskActions}>
-                <AppButton
-                  title="Done"
-                  onPress={() => handleTaskAction(task.id)}
-                  style={styles.smallButton}
-                />
-                <AppButton
-                  title="Skip"
-                  onPress={() => handleTaskAction(task.id)}
-                  variant="muted"
-                  style={styles.smallButton}
-                />
-              </View>
-            </View>
-          );
-        })}
+        {timed && task.duration ? (
+          <Text style={styles.taskDuration}>
+            {running || timeLeft < totalSeconds
+              ? formatCountdown(timeLeft)
+              : formatDuration(task.duration)}
+          </Text>
+        ) : null}
       </View>
-    </SafeAreaView>
+      {!done && timed && totalSeconds > 0 && (
+        <AppButton
+          title={running ? "Pause" : "Start"}
+          onPress={handleToggle}
+          variant={running ? "danger" : "secondary"}
+          style={styles.smallButton}
+        />
+      )}
+      {!done && (
+        <AppButton title="Done" onPress={handleDone} style={styles.smallButton} />
+      )}
+    </View>
+  );
+}
+
+export default function MultiActivityScreen({ navigation, route }) {
+  const { activityId } = route?.params ?? {};
+  const activity = useActivityStore((state) =>
+    activityId == null
+      ? undefined
+      : state.activities.find((item) => String(item.id) === String(activityId)),
+  );
+
+  const { log, loading, start, saveProgress, complete } = useActivityLog(
+    activity?.id,
+    todayKey(),
+  );
+  const [activeTaskId, setActiveTaskId] = useState(null);
+
+  const tasks = Array.isArray(activity?.typeData) ? activity.typeData : [];
+  const completedIds = log?.data?.completedTaskIds ?? [];
+  const timers = log?.data?.timers ?? {};
+
+  if (!activity) {
+    return (
+      <View style={styles.fallback}>
+        <Text style={styles.fallbackText}>Activity not found.</Text>
+        <AppButton title="Back" onPress={() => navigation.goBack()} variant="secondary" />
+      </View>
+    );
+  }
+
+  if (!loading && log?.status === LOG_STATUS.COMPLETED) {
+    return (
+      <CompletionView
+        title="All Tasks Completed! 🎉"
+        buttonLabel="Back"
+        onPress={() => navigation.goBack()}
+      />
+    );
+  }
+
+  const progressFor = (doneIds) =>
+    tasks.length > 0 ? Math.round((doneIds.length / tasks.length) * 100) : 100;
+
+  const handleTimerPause = (taskId, elapsedSeconds) => {
+    saveProgress(progressFor(completedIds), {
+      completedTaskIds: completedIds,
+      timers: { ...timers, [taskId]: elapsedSeconds },
+    });
+  };
+
+  const handleDoneTask = (taskId, elapsedSeconds) => {
+    if (activeTaskId === taskId) setActiveTaskId(null);
+    const updated = [...completedIds, taskId];
+    const data = {
+      completedTaskIds: updated,
+      timers: { ...timers, [taskId]: elapsedSeconds },
+    };
+    if (updated.length >= tasks.length) {
+      complete(data);
+    } else {
+      saveProgress(progressFor(updated), data);
+    }
+  };
+
+  return (
+    <ExecutionShell
+      title={activity.title}
+      subtitle={`Multi activities • ${completedIds.length} / ${tasks.length} tasks`}
+      status={log?.status ?? LOG_STATUS.PENDING}
+      progress={log?.progress ?? 0}
+    >
+      {loading ? (
+        <View style={styles.center}>
+          <Text style={styles.hint}>Loading…</Text>
+        </View>
+      ) : log?.status === LOG_STATUS.PENDING ? (
+        <View style={styles.center}>
+          <Text style={styles.hint}>
+            Complete each task below. Your progress is saved automatically.
+          </Text>
+          <AppButton title="Start" onPress={() => start()} style={styles.startButton} />
+        </View>
+      ) : (
+        <View style={styles.list}>
+          {tasks.map((task) => (
+            <MultiTaskRow
+              key={task.id}
+              task={task}
+              elapsed={timers[task.id] ?? 0}
+              running={activeTaskId === task.id && !completedIds.includes(task.id)}
+              done={completedIds.includes(task.id)}
+              onStart={setActiveTaskId}
+              onTimerPause={handleTimerPause}
+              onDone={handleDoneTask}
+            />
+          ))}
+        </View>
+      )}
+
+      <AppButton
+        title="Back"
+        onPress={() => navigation.goBack()}
+        variant="secondary"
+        style={styles.backButton}
+      />
+    </ExecutionShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fallback: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.md,
+    padding: theme.spacing.lg,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: theme.spacing.md,
   },
-  content: {
+  fallbackText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSizes.md,
+  },
+  center: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: theme.spacing.md,
   },
-  header: {
-    color: theme.colors.text,
-    fontSize: theme.fontSizes.lg,
-    fontWeight: theme.fontWeights.bold,
-    marginBottom: theme.spacing.md,
+  hint: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSizes.md,
+    textAlign: "center",
+    paddingHorizontal: theme.spacing.lg,
+  },
+  startButton: {
+    paddingHorizontal: theme.spacing.xl,
+  },
+  list: {
+    flex: 1,
+    gap: theme.spacing.xs,
   },
   taskRow: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.sm,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    gap: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
   },
-  taskRowActive: {
-    borderColor: theme.colors.primary,
+  taskDone: {
+    opacity: 0.6,
   },
   taskInfo: {
     flex: 1,
@@ -151,30 +251,22 @@ const styles = StyleSheet.create({
   taskTitle: {
     color: theme.colors.text,
     fontSize: theme.fontSizes.md,
-    fontWeight: theme.fontWeights.bold,
   },
-  taskTime: {
+  taskTitleDone: {
+    textDecorationLine: "line-through",
     color: theme.colors.textSecondary,
-    fontSize: theme.fontSizes.sm,
-    marginTop: theme.spacing.xs,
   },
-  taskTimeActive: {
+  taskDuration: {
     color: theme.colors.primary,
-    fontWeight: "bold",
-  },
-  taskStandard: {
-    color: theme.colors.textSecondary,
     fontSize: theme.fontSizes.sm,
-    marginTop: theme.spacing.xs,
-  },
-  taskActions: {
-    flexDirection: "row",
-    gap: theme.spacing.sm,
+    marginTop: 2,
+    fontVariant: ["tabular-nums"],
   },
   smallButton: {
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 0,
+  },
+  backButton: {
+    marginTop: theme.spacing.md,
   },
 });

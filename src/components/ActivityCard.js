@@ -19,7 +19,7 @@ const renderScheduleUi = (schedule, scheduleData) => {
   }
 };
 
-export function ActivityCard({ activity, onPress, onLongPress }) {
+export function ActivityCard({ activity, onPress, onLongPress, footer }) {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -32,6 +32,7 @@ export function ActivityCard({ activity, onPress, onLongPress }) {
         <Text style={styles.title}>{activity.schedule}</Text>
         {/* Schedule */}
         {renderScheduleUi(activity.schedule, activity.scheduleData)}
+        {footer}
       </View>
     </TouchableOpacity>
   );

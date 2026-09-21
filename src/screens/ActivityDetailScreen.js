@@ -5,6 +5,7 @@ import theme from "../styles/theme";
 import useActivityStore from "../store/activityStore";
 import { ReviewStep } from "../components/create-activity/ReviewStep";
 import { AppButton } from "../components/common/AppButton";
+import { getExecutionRoute } from "../utils/activityNavigation";
 
 export function ActivityDetailScreen({ navigation, route }) {
   const { activityId } = route.params ?? {};
@@ -50,14 +51,24 @@ export function ActivityDetailScreen({ navigation, route }) {
 
       <View style={styles.actionsRow}>
         <AppButton
+          title="Start"
+          onPress={() => {
+            const route = getExecutionRoute(activity);
+            navigation.navigate(route.name, route.params);
+          }}
+          style={styles.flex}
+        />
+        <AppButton
           title="Edit"
           onPress={() =>
             navigation.navigate("EditActivityScreen", { activityId: activity.id })
           }
+          variant="secondary"
           style={styles.flex}
         />
-        <AppButton title="Delete" onPress={handleDelete} variant="danger" style={styles.flex} />
       </View>
+
+      <AppButton title="Delete" onPress={handleDelete} variant="danger" style={styles.deleteButton} />
     </SafeAreaView>
   );
 }
@@ -72,8 +83,11 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: theme.spacing.lg },
   actionsRow: {
     flexDirection: "row",
-    paddingVertical: theme.spacing.md,
+    paddingTop: theme.spacing.md,
     gap: theme.spacing.sm,
+  },
+  deleteButton: {
+    marginVertical: theme.spacing.md,
   },
   flex: {
     flex: 1,

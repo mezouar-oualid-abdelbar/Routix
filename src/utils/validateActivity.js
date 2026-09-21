@@ -9,6 +9,13 @@ export function validateStep(step, draft) {
 
   if (step === 2) {
     if (
+      draft.type === "timed" &&
+      (!draft.typeData ||
+        (draft.typeData.hours ?? 0) + (draft.typeData.minutes ?? 0) <= 0)
+    ) {
+      errors.typeData = "Duration is required";
+    }
+    if (
       draft.type === "follow_up" &&
       (!draft.typeData || draft.typeData.length === 0)
     ) {

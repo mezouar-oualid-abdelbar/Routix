@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import HomeScreen from "../screens/HomeScreen";
 import ActivitiesScreen from "../screens/ActivitiesScreen";
-import StatsScreen from "../screens/StatsScreen";
+import StatusScreen from "../screens/StatusScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import theme from "../styles/theme";
 import CreateActivityScreen from "../screens/CreateActivityScreen";
@@ -64,8 +64,8 @@ function BottomTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Stats"
-        component={StatsScreen}
+        name="Status"
+        component={StatusScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon

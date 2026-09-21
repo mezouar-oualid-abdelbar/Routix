@@ -1,181 +1,149 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import theme from "../styles/theme";
 import { AppButton } from "../components/common/AppButton";
 import { CompletionView } from "../components/common/CompletionView";
-import { formatCountdown } from "../utils/formatTime";
+import { ExecutionShell } from "../components/execution/ExecutionShell";
+import useActivityStore from "../store/activityStore";
+import { useActivityLog } from "../hooks/useActivityLog";
+import { useTaskTimer } from "../hooks/useTaskTimer";
+import { todayKey } from "../utils/dates";
+import { LOG_STATUS } from "../constants/logStatus";
+import { formatCountdown, formatDuration } from "../utils/formatTime";
 
-const initialTasks = [
-    { id: "1", title: "Warmup Stretch", time: 15, completed: false },
-    { id: "2", title: "Review Code Notes", completed: false }, // Standard task
-    { id: "3", title: "Pushups", time: 30, completed: false },
-];
+const DEFAULT_DURATION = { hours: 1, minutes: 0 };
 
-export default function TimedActivityScreen() {
-  const [tasks, setTasks] = useState(initialTasks);
-  const [currentIndex, setCurrentIndex] = useState(0);
+export default function TimedActivityScreen({ navigation, route }) {
+  const { activityId } = route?.params ?? {};
+  const activity = useActivityStore((state) =>
+    activityId == null
+      ? undefined
+      : state.activities.find((item) => String(item.id) === String(activityId)),
+  );
 
-  const currentTask = tasks[currentIndex];
-  const [timeLeft, setTimeLeft] = useState(currentTask?.time || 0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [timeIsUp, setTimeIsUp] = useState(false);
+  const { log, loading, start, saveProgress, complete } = useActivityLog(
+    activity?.id,
+    todayKey(),
+  );
+  const { timeLeft, isRunning, start: startTimer, pause: pauseTimer, reset } =
+    useTaskTimer();
 
+  const totalSeconds = useMemo(() => {
+    const duration = activity?.typeData ?? DEFAULT_DURATION;
+    return (
+      (duration.hours ?? 0) * 3600 + (duration.minutes ?? 0) * 60 ||
+      30 * 60
+    );
+  }, [activity]);
+
+  const [hydrated, setHydrated] = useState(false);
+
+  // Resume persisted progress once the log has loaded.
   useEffect(() => {
-    if (currentTask) {
-      if (currentTask.time) {
-        setTimeLeft(currentTask.time);
-        setIsRunning(false);
-        setTimeIsUp(false);
-      } else {
-        setTimeLeft(0);
-        setIsRunning(false);
-        setTimeIsUp(false);
-      }
+    if (!loading && log && !hydrated) {
+      reset(totalSeconds - (log.data?.elapsedSeconds ?? 0));
+      setHydrated(true);
     }
-  }, [currentIndex, currentTask]);
+  }, [loading, log, hydrated, totalSeconds, reset]);
 
-  useEffect(() => {
-    if (!isRunning || !currentTask?.time || timeIsUp) return;
-
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsRunning(false);
-          setTimeIsUp(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isRunning, currentTask, timeIsUp]);
-
-  const handleNextTask = () => {
-    setIsRunning(false);
-    setTimeIsUp(false);
-    if (currentIndex < tasks.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      setCurrentIndex(tasks.length);
-    }
+  const persistElapsed = (secondsLeft) => {
+    const elapsed = totalSeconds - secondsLeft;
+    const progress = Math.min(
+      100,
+      Math.round((elapsed / totalSeconds) * 100),
+    );
+    return saveProgress(progress, { totalSeconds, elapsedSeconds: elapsed });
   };
 
-  if (currentIndex >= tasks.length) {
+  if (!activity) {
+    return (
+      <View style={styles.fallback}>
+        <Text style={styles.fallbackText}>Activity not found.</Text>
+        <AppButton title="Back" onPress={() => navigation.goBack()} variant="secondary" />
+      </View>
+    );
+  }
+
+  if (!loading && log?.status === LOG_STATUS.COMPLETED) {
     return (
       <CompletionView
-        title="Workout Complete! 🎉"
-        buttonLabel="Restart"
-        onPress={() => {
-          setCurrentIndex(0);
-          setTasks(initialTasks);
-        }}
+        title="Timer Complete! 🎉"
+        buttonLabel="Back"
+        onPress={() => navigation.goBack()}
       />
     );
   }
 
+  const handleStartPause = () => {
+    if (isRunning) {
+      pauseTimer();
+    } else {
+      start();
+      startTimer({
+        onPersist: persistElapsed,
+        onFinish: () =>
+          complete({ totalSeconds, elapsedSeconds: totalSeconds }),
+      });
+    }
+  };
+
+  const handleComplete = () => {
+    pauseTimer();
+    complete({ totalSeconds, elapsedSeconds: totalSeconds - timeLeft });
+  };
+
+  const isStarted = log?.status === LOG_STATUS.IN_PROGRESS;
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.counter}>
-        Task {currentIndex + 1} of {tasks.length}
-      </Text>
-
+    <ExecutionShell
+      title={activity.title}
+      subtitle={`Timed • ${formatDuration(activity.typeData ?? DEFAULT_DURATION)}`}
+      status={log?.status ?? LOG_STATUS.PENDING}
+      progress={log?.progress ?? 0}
+    >
       <View style={styles.center}>
-        <Text style={styles.taskTitle}>
-          {currentTask.title}
-        </Text>
-
-        {currentTask.time ? (
-          <View style={styles.timerBlock}>
-            <Text style={styles.timerText}>
-              {formatCountdown(timeLeft)}
-            </Text>
-
-            {timeIsUp && (
-              <Text style={styles.timeUpText}>
-                Time is up!
-              </Text>
-            )}
-          </View>
+        <Text style={styles.timerText}>{formatCountdown(timeLeft)}</Text>
+        {loading ? (
+          <Text style={styles.hint}>Loading…</Text>
         ) : (
-          <Text style={styles.standardLabel}>
-            Standard Activity
+          <Text style={styles.hint}>
+            {isStarted ? "Timer running from saved progress." : "Start the timer to begin."}
           </Text>
         )}
       </View>
 
       <View style={styles.controlsRow}>
-        {currentTask.time ? (
-          timeIsUp ? (
-            <AppButton
-              title="Next"
-              onPress={handleNextTask}
-              style={styles.flex}
-            />
-          ) : (
-            <>
-              <AppButton
-                title={isRunning ? "Pause" : "Start"}
-                onPress={() => setIsRunning(!isRunning)}
-                variant={isRunning ? "danger" : "primary"}
-                style={styles.flex}
-              />
-              <AppButton
-                title="Skip"
-                onPress={handleNextTask}
-                variant="secondary"
-                style={styles.flex}
-              />
-            </>
-          )
-        ) : (
-          <>
-            <AppButton
-              title="Done"
-              onPress={handleNextTask}
-              style={styles.flex}
-            />
-            <AppButton
-              title="Skip"
-              onPress={handleNextTask}
-              variant="secondary"
-              style={styles.flex}
-            />
-          </>
-        )}
+        <AppButton
+          title={isRunning ? "Pause" : "Start"}
+          onPress={handleStartPause}
+          variant={isRunning ? "danger" : "primary"}
+          style={styles.flex}
+        />
+        <AppButton title="Complete" onPress={handleComplete} style={styles.flex} />
       </View>
-    </SafeAreaView>
+
+      <AppButton title="Back" onPress={() => navigation.goBack()} variant="secondary" />
+    </ExecutionShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fallback: {
     flex: 1,
     backgroundColor: theme.colors.background,
     padding: theme.spacing.lg,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: theme.spacing.md,
   },
-  counter: {
+  fallbackText: {
     color: theme.colors.textSecondary,
-    fontSize: theme.fontSizes.sm,
-    marginBottom: theme.spacing.sm,
+    fontSize: theme.fontSizes.md,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  taskTitle: {
-    color: theme.colors.text,
-    fontSize: theme.fontSizes.xxl,
-    fontWeight: theme.fontWeights.bold,
-    textAlign: "center",
-    marginBottom: theme.spacing.xl,
-  },
-  timerBlock: {
-    alignItems: "center",
-    marginBottom: theme.spacing.xxl,
   },
   timerText: {
     color: theme.colors.primary,
@@ -183,21 +151,16 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeights.bold,
     fontVariant: ["tabular-nums"],
   },
-  timeUpText: {
-    color: theme.colors.error,
-    fontSize: theme.fontSizes.md,
-    fontWeight: theme.fontWeights.bold,
-    marginTop: theme.spacing.md,
-  },
-  standardLabel: {
+  hint: {
     color: theme.colors.textSecondary,
     fontSize: theme.fontSizes.md,
-    marginBottom: theme.spacing.xxl,
+    marginTop: theme.spacing.md,
+    textAlign: "center",
   },
   controlsRow: {
     flexDirection: "row",
     gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   flex: {
     flex: 1,

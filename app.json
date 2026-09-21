@@ -15,7 +15,8 @@
         "foregroundImage": "./src/assets/android-icon-foreground.png",
         "backgroundImage": "./src/assets/android-icon-background.png",
         "monochromeImage": "./src/assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.anonymous.routix"
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
@@ -24,6 +25,11 @@
       "expo-status-bar",
       "expo-sqlite",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b018f47a-f410-4099-8f47-145b282ad843"
+      }
+    }
   }
 }

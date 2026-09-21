@@ -11,11 +11,12 @@ import { useFocusEffect } from "@react-navigation/native";
 import theme from "../styles/theme";
 import ActivityCard from "../components/ActivityCard";
 import useActivityStore from "../store/activityStore";
+import { sortByPriority, sortByTime } from "../utils/activityFilters";
 import {
-  isDueToday,
-  sortByPriority,
-  sortByTime,
-} from "../utils/activityFilters";
+  getProgressSummary,
+} from "../utils/todayEntries";
+import { getExecutionRoute } from "../utils/activityNavigation";
+import { LOG_STATUS_META } from "../constants/logStatus";
 
 const STATUS_FILTERS = [
   { label: "All", value: "all" },
@@ -24,52 +25,55 @@ const STATUS_FILTERS = [
   { label: "Completed", value: "completed" },
 ];
 
-const navigateToTypeScreen = (navigation, activity) => {
-  switch (activity.type) {
-    case "multi_activities":
-      navigation.navigate("MultiActivityScreen", { activityId: activity.id });
-      break;
-    case "timed":
-      navigation.navigate("TimedActivityScreen", { activityId: activity.id });
-      break;
-    case "follow_up":
-      navigation.navigate("FollowUpActivityScreen", { activityId: activity.id });
-      break;
-    case "normal":
-    default:
-      navigation.navigate("NormalActivityScreen", {
-        activityId: activity.id,
-        activityTitle: activity.title,
-      });
-      break;
-  }
+const STATUS_COLORS = {
+  pending: theme.colors.textSecondary,
+  in_progress: theme.colors.info,
+  completed: theme.colors.success,
 };
 
+function EntryFooter({ entry }) {
+  const summary = getProgressSummary(entry);
+  return (
+    <View style={styles.footer}>
+      <View style={styles.footerTrack}>
+        <View style={[styles.footerFill, { width: `${summary.percent}%` }]} />
+      </View>
+      <View style={styles.footerRow}>
+        <Text style={[styles.footerStatus, { color: STATUS_COLORS[entry.status] }]}>
+          {LOG_STATUS_META[entry.status]?.label ?? entry.status}
+        </Text>
+        {summary.detail ? (
+          <Text style={styles.footerDetail}>{summary.detail}</Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 export default function HomeScreen({ navigation }) {
-  const activities = useActivityStore((state) => state.activities);
-  const loadActivities = useActivityStore((state) => state.loadActivities);
+  const todayEntries = useActivityStore((state) => state.todayEntries);
+  const refreshToday = useActivityStore((state) => state.refreshToday);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortMode, setSortMode] = useState("priority");
 
   useFocusEffect(
     useCallback(() => {
-      loadActivities();
-    }, [loadActivities]),
+      refreshToday();
+    }, [refreshToday]),
   );
 
-  const todayActivities = useMemo(() => {
-    const dueToday = activities.filter((activity) => isDueToday(activity));
+  const visibleEntries = useMemo(() => {
     const filtered =
       statusFilter === "all"
-        ? dueToday
-        : dueToday.filter(
-            (activity) => (activity.status ?? "pending") === statusFilter,
-          );
-    return [...filtered].sort(
-      sortMode === "time" ? sortByTime : sortByPriority,
-    );
-  }, [activities, statusFilter, sortMode]);
+        ? todayEntries
+        : todayEntries.filter((entry) => entry.status === statusFilter);
+    const compare =
+      sortMode === "time"
+        ? (a, b) => sortByTime(a.activity, b.activity)
+        : (a, b) => sortByPriority(a.activity, b.activity);
+    return [...filtered].sort(compare);
+  }, [todayEntries, statusFilter, sortMode]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -119,12 +123,16 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       <FlatList
-        data={todayActivities}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => (
+        data={visibleEntries}
+        keyExtractor={(entry) => String(entry.activity.id)}
+        renderItem={({ item: entry }) => (
           <ActivityCard
-            activity={item}
-            onPress={() => navigateToTypeScreen(navigation, item)}
+            activity={entry.activity}
+            onPress={() => {
+              const route = getExecutionRoute(entry.activity);
+              navigation.navigate(route.name, route.params);
+            }}
+            footer={<EntryFooter entry={entry} />}
           />
         )}
         ListEmptyComponent={
@@ -200,6 +208,35 @@ const styles = StyleSheet.create({
   sortTextActive: {
     color: theme.colors.textInverse,
     fontWeight: theme.fontWeights.bold,
+  },
+  footer: {
+    marginTop: theme.spacing.sm,
+  },
+  footerTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    overflow: "hidden",
+  },
+  footerFill: {
+    height: "100%",
+    backgroundColor: theme.colors.primary,
+  },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: theme.spacing.xs,
+  },
+  footerStatus: {
+    fontSize: theme.fontSizes.sm,
+    fontWeight: theme.fontWeights.bold,
+  },
+  footerDetail: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.textSecondary,
   },
   empty: {
     color: theme.colors.textSecondary,

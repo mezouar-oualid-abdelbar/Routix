@@ -1,289 +1,198 @@
-import React, { useState } from "react";
-import { Text, TouchableOpacity, View, Modal, TextInput, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React from "react";
+import { Text, View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import theme from "../styles/theme";
 import { AppButton } from "../components/common/AppButton";
 import { CompletionView } from "../components/common/CompletionView";
+import { ExecutionShell } from "../components/execution/ExecutionShell";
+import useActivityStore from "../store/activityStore";
+import { useActivityLog } from "../hooks/useActivityLog";
+import { todayKey } from "../utils/dates";
+import { LOG_STATUS } from "../constants/logStatus";
 
-const initialTasks = [
-  { id: "1", title: "Laundry", at: "12:00 PM", completed: false },
-  { id: "2", title: "Dry", at: null, completed: false },
-  { id: "3", title: "Fold", at: null, completed: false },
-];
+export default function FollowUpActivityScreen({ navigation, route }) {
+  const { activityId } = route?.params ?? {};
+  const activity = useActivityStore((state) =>
+    activityId == null
+      ? undefined
+      : state.activities.find((item) => String(item.id) === String(activityId)),
+  );
 
-export default function FollowUpActivityScreen() {
-  const [tasks, setTasks] = useState(initialTasks);
-  const [activeAlarmIndex, setActiveAlarmIndex] = useState(0);
-  const [isAlerting, setIsAlerting] = useState(true);
+  const { log, loading, start, saveProgress, complete } = useActivityLog(
+    activity?.id,
+    todayKey(),
+  );
 
-  // Modal states for setting the next alarm time
-  const [modalVisible, setModalVisible] = useState(false);
-  const [nextAlarmTimeInput, setNextAlarmTimeInput] = useState("");
+  const steps = Array.isArray(activity?.typeData) ? activity.typeData : [];
+  const completedIds = log?.data?.completedStepIds ?? [];
+  const nextIndex = steps.findIndex((step) => !completedIds.includes(step.id));
 
-  const currentTask = tasks[activeAlarmIndex];
+  if (!activity) {
+    return (
+      <View style={styles.fallback}>
+        <Text style={styles.fallbackText}>Activity not found.</Text>
+        <AppButton title="Back" onPress={() => navigation.goBack()} variant="secondary" />
+      </View>
+    );
+  }
 
-  // Triggered when user presses Complete
-  const handleCompletePress = () => {
-    if (activeAlarmIndex + 1 < tasks.length) {
-      setModalVisible(true);
-    } else {
-      completeTaskWithoutModal();
-    }
-  };
-
-  const completeTaskWithoutModal = () => {
-    setTasks((prevTasks) => {
-      const updated = [...prevTasks];
-      updated[activeAlarmIndex].completed = true;
-      return updated;
-    });
-
-    setIsAlerting(false);
-    if (activeAlarmIndex + 1 < tasks.length) {
-      setActiveAlarmIndex((prev) => prev + 1);
-      setIsAlerting(true);
-    }
-  };
-
-  const handleConfirmNextTime = () => {
-    setTasks((prevTasks) => {
-      const updated = [...prevTasks];
-      updated[activeAlarmIndex].completed = true;
-
-      if (activeAlarmIndex + 1 < updated.length && nextAlarmTimeInput.trim() !== "") {
-        updated[activeAlarmIndex + 1].at = nextAlarmTimeInput;
-      }
-
-      return updated;
-    });
-
-    setModalVisible(false);
-    setNextAlarmTimeInput("");
-    setIsAlerting(false);
-
-    if (activeAlarmIndex + 1 < tasks.length) {
-      setActiveAlarmIndex((prev) => prev + 1);
-      setIsAlerting(true);
-    }
-  };
-
-  // Only available when the alarm is actively ringing on screen
-  const handleRemindIn5Min = () => {
-    setIsAlerting(false);
-  };
-
-  // If all tasks are completed
-  if (activeAlarmIndex >= tasks.length || tasks.every(t => t.completed)) {
+  if (!loading && log?.status === LOG_STATUS.COMPLETED) {
     return (
       <CompletionView
-        title="All Alarms Completed! ⏰✨"
-        buttonLabel="Reset Alarms"
-        onPress={() => {
-          setTasks(initialTasks);
-          setActiveAlarmIndex(0);
-          setIsAlerting(true);
-        }}
+        title="All Steps Completed! 🎉"
+        buttonLabel="Back"
+        onPress={() => navigation.goBack()}
       />
     );
   }
 
+  const handleCompleteStep = (stepId) => {
+    const updated = [...completedIds, stepId];
+    const progress = Math.round((updated.length / steps.length) * 100);
+    if (updated.length >= steps.length) {
+      complete({ completedStepIds: updated });
+    } else {
+      saveProgress(progress, { completedStepIds: updated });
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-
-        {isAlerting ? (
-          <View style={styles.alertBlock}>
-            <Text style={styles.ringingLabel}>
-              🔔 Alarm Ringing
-            </Text>
-
-            <Text style={styles.taskTitle}>
-              {currentTask.title}
-            </Text>
-
-            <Text style={styles.scheduledFor}>
-              Scheduled for: {currentTask.at || "Pending previous task"}
-            </Text>
-
-            <View style={styles.alertButtons}>
-              <AppButton title="Complete" onPress={handleCompletePress} />
-              <AppButton
-                title="Remind in 5 min"
-                onPress={handleRemindIn5Min}
-                variant="secondary"
-                textStyle={styles.remindText}
-              />
-            </View>
-          </View>
-        ) : (
-          <View style={styles.snoozedBlock}>
-            <Text style={styles.snoozedLabel}>
-              Snoozed / Awaiting Next Alarm...
-            </Text>
-            <TouchableOpacity
-              onPress={() => setIsAlerting(true)}
-              style={styles.openAlarmButton}
-            >
-              <Text style={styles.openAlarmText}>
-                Open Alarm
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Modal to Set Time for the Next Alarm */}
-        <Modal
-          visible={modalVisible}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>
-                Set time for next task ({tasks[activeAlarmIndex + 1]?.title})
-              </Text>
-
-              <TextInput
-                placeholder="e.g. 1:00 PM"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={nextAlarmTimeInput}
-                onChangeText={setNextAlarmTimeInput}
-                style={styles.modalInput}
-              />
-
-              <View style={styles.modalButtonRow}>
-                <AppButton
-                  title="Save & Continue"
-                  onPress={handleConfirmNextTime}
-                  style={styles.flex}
-                />
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  style={[styles.cancelButton, styles.flex]}
+    <ExecutionShell
+      title={activity.title}
+      subtitle={`Follow up • ${steps.length} steps`}
+      status={log?.status ?? LOG_STATUS.PENDING}
+      progress={log?.progress ?? 0}
+    >
+      {loading ? (
+        <View style={styles.center}>
+          <Text style={styles.hint}>Loading…</Text>
+        </View>
+      ) : log?.status === LOG_STATUS.PENDING ? (
+        <View style={styles.center}>
+          <Text style={styles.hint}>
+            Complete the steps in order. Your progress is saved automatically.
+          </Text>
+          <AppButton title="Start" onPress={() => start()} style={styles.startButton} />
+        </View>
+      ) : (
+        <View style={styles.list}>
+          {steps.map((step, index) => {
+            const isDone = completedIds.includes(step.id);
+            const isNext = index === nextIndex;
+            return (
+              <View
+                key={step.id}
+                style={[styles.stepRow, !isDone && !isNext && styles.stepLocked]}
+              >
+                <View
+                  style={[styles.stepNumber, isDone && styles.stepNumberDone]}
                 >
-                  <Text style={styles.cancelButtonText}>
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
+                  {isDone ? (
+                    <Ionicons name="checkmark" size={14} color={theme.colors.textInverse} />
+                  ) : (
+                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  )}
+                </View>
+                <Text style={[styles.stepTitle, isDone && styles.stepTitleDone]}>
+                  {step.title}
+                </Text>
+                {isNext && (
+                  <AppButton
+                    title="Complete"
+                    onPress={() => handleCompleteStep(step.id)}
+                    style={styles.stepButton}
+                  />
+                )}
               </View>
-            </View>
-          </View>
-        </Modal>
+            );
+          })}
+        </View>
+      )}
 
-      </View>
-    </SafeAreaView>
+      <AppButton
+        title="Back"
+        onPress={() => navigation.goBack()}
+        variant="secondary"
+        style={styles.backButton}
+      />
+    </ExecutionShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fallback: {
     flex: 1,
     backgroundColor: theme.colors.background,
     padding: theme.spacing.lg,
-  },
-  content: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    width: "100%",
-  },
-  alertBlock: {
-    alignItems: "center",
-    width: "100%",
-  },
-  ringingLabel: {
-    color: theme.colors.warning,
-    fontSize: theme.fontSizes.sm,
-    fontWeight: theme.fontWeights.bold,
-    textTransform: "uppercase",
-    marginBottom: theme.spacing.sm,
-  },
-  taskTitle: {
-    color: theme.colors.text,
-    fontSize: theme.fontSizes.xxl * 1.2,
-    fontWeight: theme.fontWeights.bold,
-    textAlign: "center",
-    marginBottom: theme.spacing.xs,
-  },
-  scheduledFor: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.fontSizes.lg,
-    marginBottom: theme.spacing.xxl,
-  },
-  alertButtons: {
-    width: "100%",
     gap: theme.spacing.md,
   },
-  remindText: {
-    color: theme.colors.error,
-  },
-  snoozedBlock: {
-    alignItems: "center",
-  },
-  snoozedLabel: {
+  fallbackText: {
     color: theme.colors.textSecondary,
-    fontSize: theme.fontSizes.lg,
-    marginBottom: theme.spacing.md,
-  },
-  openAlarmButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.borderRadius.md,
-  },
-  openAlarmText: {
-    color: theme.colors.textInverse,
-    fontWeight: theme.fontWeights.bold,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: theme.colors.overlay,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-  },
-  modalCard: {
-    width: "100%",
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  modalTitle: {
-    color: theme.colors.text,
-    fontSize: theme.fontSizes.lg,
-    fontWeight: theme.fontWeights.bold,
-    marginBottom: theme.spacing.md,
-  },
-  modalInput: {
-    backgroundColor: theme.colors.background,
-    color: theme.colors.text,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
     fontSize: theme.fontSizes.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: theme.spacing.lg,
   },
-  modalButtonRow: {
-    flexDirection: "row",
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     gap: theme.spacing.md,
   },
-  flex: {
-    flex: 1,
-  },
-  cancelButton: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignItems: "center",
-  },
-  cancelButtonText: {
+  hint: {
     color: theme.colors.textSecondary,
+    fontSize: theme.fontSizes.md,
+    textAlign: "center",
+    paddingHorizontal: theme.spacing.lg,
+  },
+  startButton: {
+    paddingHorizontal: theme.spacing.xl,
+  },
+  list: {
+    flex: 1,
+    gap: theme.spacing.xs,
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  stepLocked: {
+    opacity: 0.5,
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.disabled,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepNumberDone: {
+    backgroundColor: theme.colors.primary,
+  },
+  stepNumberText: {
+    color: theme.colors.textInverse,
+    fontSize: theme.fontSizes.xs,
     fontWeight: theme.fontWeights.bold,
+  },
+  stepTitle: {
+    flex: 1,
+    color: theme.colors.text,
+    fontSize: theme.fontSizes.md,
+  },
+  stepTitleDone: {
+    textDecorationLine: "line-through",
+    color: theme.colors.textSecondary,
+  },
+  stepButton: {
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+  },
+  backButton: {
+    marginTop: theme.spacing.md,
   },
 });
