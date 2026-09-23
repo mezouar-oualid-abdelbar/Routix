@@ -78,7 +78,7 @@ function BottomTabNavigator() {
           ),
         }}
       />
-      {/* <Tab.Screen
+      <Tab.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
@@ -92,7 +92,7 @@ function BottomTabNavigator() {
             />
           ),
         }}
-      /> */}
+      />
       <Tab.Screen
         name="CreateActivityScreen"
         component={CreateActivityScreen}
