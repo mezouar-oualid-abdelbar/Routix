@@ -1,29 +1,57 @@
-import { Component } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
-import theme from "../styles/theme";
+import React, { useEffect, useMemo, useState } from "react";
+import { FlatList, StyleSheet, Text, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import theme from "../styles/theme";
+import ActivityCard from "../components/ActivityCard";
+import useActivityStore from "../store/activityStore";
+import { searchActivities } from "../utils/searchActivities";
 
-class SearchScreen extends Component {
-  state = {
-    query: "",
-  };
+export default function SearchScreen({ navigation, route }) {
+  const activities = useActivityStore((state) => state.activities);
+  const loadActivities = useActivityStore((state) => state.loadActivities);
+  const [query, setQuery] = useState(route?.params?.query ?? "");
 
-  render() {
-    return (
-      <SafeAreaView style={styles.container}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="search for your activity"
-          placeholderTextColor={theme.colors.textSecondary}
-          value={this.state.query}
-          onChangeText={(text) => this.setState({ query: text })}
-          autoFocus
-        />
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
-        <Text style={styles.placeholder}>No results yet</Text>
-      </SafeAreaView>
-    );
-  }
+  const results = useMemo(
+    () => searchActivities(activities, query),
+    [activities, query],
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <TextInput
+        style={styles.searchBar}
+        placeholder="search for your activity"
+        placeholderTextColor={theme.colors.textSecondary}
+        value={query}
+        onChangeText={setQuery}
+        autoFocus
+      />
+
+      <FlatList
+        data={results}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => (
+          <ActivityCard
+            activity={item}
+            onPress={() =>
+              navigation.navigate("ActivityDetailScreen", {
+                activityId: item.id,
+              })
+            }
+          />
+        )}
+        ListEmptyComponent={
+          <Text style={styles.placeholder}>
+            {query.trim() ? "No activities found" : "No activities yet"}
+          </Text>
+        }
+      />
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -50,5 +78,3 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.lg,
   },
 });
-
-export default SearchScreen;
