@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import HomeScreen from "../screens/HomeScreen";
 import ActivitiesScreen from "../screens/ActivitiesScreen";
 import StatusScreen from "../screens/StatusScreen";
-import SettingsScreen from "../screens/SettingsScreen";
+import PluginsScreen from "../screens/PluginsScreen";
 import theme from "../styles/theme";
 import CreateActivityScreen from "../screens/CreateActivityScreen";
 
@@ -79,16 +79,16 @@ function BottomTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
+        name="plugins"
+        component={PluginsScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon
               focused={focused}
               color={color}
               size={size}
-              activeName="settings"
-              inactiveName="settings-outline"
+              activeName="extension-puzzle"
+              inactiveName="extension-puzzle-outline"
             />
           ),
         }}
