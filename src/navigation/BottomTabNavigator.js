@@ -87,8 +87,8 @@ function BottomTabNavigator() {
               focused={focused}
               color={color}
               size={size}
-              activeName="extension-puzzle"
-              inactiveName="extension-puzzle-outline"
+              activeName="settings"
+              inactiveName="settings-outline"
             />
           ),
         }}
