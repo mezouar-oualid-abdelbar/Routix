@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getOrCreateActivityLog, updateActivityLog } from "../database/activityLogs";
+import { resyncActivityNotifications } from "../services/notifications/activityNotifications";
 import { LOG_STATUS } from "../constants/logStatus";
 
 // Shared lifecycle for one activity on one day: loads (or lazily creates)
@@ -91,9 +92,15 @@ export function useActivityLog(activityId, logDate) {
         startedAt: current.startedAt ?? Date.now(),
       };
       if (data !== undefined) patch.data = data;
-      return persist(patch);
+      return persist(patch).then((updated) => {
+        // A completion can move a rolling interval anchor: recompute alarms.
+        resyncActivityNotifications(activityId).catch((error) =>
+          console.warn("Alarm resync after completion failed:", error),
+        );
+        return updated;
+      });
     },
-    [persist],
+    [persist, activityId],
   );
 
   return { log, loading, start, saveProgress, complete };

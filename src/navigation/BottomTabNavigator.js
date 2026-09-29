@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import HomeScreen from "../screens/HomeScreen";
 import ActivitiesScreen from "../screens/ActivitiesScreen";
 import StatusScreen from "../screens/StatusScreen";
-import SettingsScreen from "../screens/SettingsScreen";
+import BackgroundTaskScreen from "../screens/BackgroundTaskScreen";
 import theme from "../styles/theme";
 import CreateActivityScreen from "../screens/CreateActivityScreen";
 
@@ -77,7 +77,7 @@ function BottomTabNavigator() {
             />
           ),
         }}
-      />
+      /> 
       {/* <Tab.Screen
         name="Settings"
         component={SettingsScreen}
