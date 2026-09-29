@@ -13,6 +13,7 @@ export {
   getActivityLog,
   getOrCreateActivityLog,
   updateActivityLog,
+  deleteActivityLog,
   getLogsForDate,
   getLogsInRange,
   getLastCompletedDate,

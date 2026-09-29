@@ -94,6 +94,11 @@ export async function updateActivityLog(id, patch) {
   return updated;
 }
 
+export async function deleteActivityLog(id) {
+  const database = await ensureDb();
+  await database.runAsync("DELETE FROM activity_logs WHERE id = ?", id);
+}
+
 export async function getLogsForDate(logDate) {
   const database = await ensureDb();
   const rows = await database.getAllAsync(

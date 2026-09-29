@@ -6,9 +6,10 @@ import {
   updateActivity as updateActivityInDb,
   softDeleteActivity as softDeleteActivityInDb,
 } from "../api/database";
-import { getLogsForDate, getLastCompletedDates } from "../database/activityLogs";
+import { getLogsForDate } from "../database/activityLogs";
 import { todayKey } from "../utils/dates";
-import { buildTodayEntries } from "../utils/todayEntries";
+import { buildEntriesFromLogs } from "../utils/todayEntries";
+import { ensureTodayLogs } from "../services/activityLogs/ensureTodayLogs";
 import {
   cancelActivityNotifications,
   syncActivityNotifications,
@@ -33,19 +34,10 @@ const useActivityStore = create((set, get) => ({
   },
 
   refreshToday: async (now = new Date()) => {
+    await ensureTodayLogs(now);
     const activities = await getActivities();
-    const key = todayKey(now);
-    const logs = await getLogsForDate(key);
-    const logsByActivityId = {};
-    logs.forEach((log) => {
-      logsByActivityId[log.activityId] = log;
-    });
-    // Anchors exclude today: today's own completion must not hide the entry.
-    const lastDoneByActivityId = await getLastCompletedDates(key);
-    set({
-      activities,
-      todayEntries: buildTodayEntries(activities, logsByActivityId, now, lastDoneByActivityId),
-    });
+    const logs = await getLogsForDate(todayKey(now));
+    set({ activities, todayEntries: buildEntriesFromLogs(activities, logs) });
   },
 
   softDeleteActivity: async (activityId) => {

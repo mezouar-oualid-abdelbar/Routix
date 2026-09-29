@@ -10,13 +10,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import theme from "../styles/theme";
 import ActivityCard from "../components/ActivityCard";
+import { StatusBadge } from "../components/common/StatusBadge";
 import useActivityStore from "../store/activityStore";
 import { sortByPriority, sortByTime } from "../utils/activityFilters";
 import {
   getProgressSummary,
 } from "../utils/todayEntries";
 import { getExecutionRoute } from "../utils/activityNavigation";
-import { LOG_STATUS_META } from "../constants/logStatus";
 
 const STATUS_FILTERS = [
   { label: "All", value: "all" },
@@ -25,12 +25,6 @@ const STATUS_FILTERS = [
   { label: "Completed", value: "completed" },
 ];
 
-const STATUS_COLORS = {
-  pending: theme.colors.textSecondary,
-  in_progress: theme.colors.info,
-  completed: theme.colors.success,
-};
-
 function EntryFooter({ entry }) {
   const summary = getProgressSummary(entry);
   return (
@@ -38,14 +32,9 @@ function EntryFooter({ entry }) {
       <View style={styles.footerTrack}>
         <View style={[styles.footerFill, { width: `${summary.percent}%` }]} />
       </View>
-      <View style={styles.footerRow}>
-        <Text style={[styles.footerStatus, { color: STATUS_COLORS[entry.status] }]}>
-          {LOG_STATUS_META[entry.status]?.label ?? entry.status}
-        </Text>
-        {summary.detail ? (
-          <Text style={styles.footerDetail}>{summary.detail}</Text>
-        ) : null}
-      </View>
+      {summary.detail ? (
+        <Text style={styles.footerDetail}>{summary.detail}</Text>
+      ) : null}
     </View>
   );
 }
@@ -132,6 +121,7 @@ export default function HomeScreen({ navigation }) {
               const route = getExecutionRoute(entry.activity);
               navigation.navigate(route.name, route.params);
             }}
+            badge={<StatusBadge status={entry.status} />}
             footer={<EntryFooter entry={entry} />}
           />
         )}
@@ -224,19 +214,10 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: theme.colors.primary,
   },
-  footerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: theme.spacing.xs,
-  },
-  footerStatus: {
-    fontSize: theme.fontSizes.sm,
-    fontWeight: theme.fontWeights.bold,
-  },
   footerDetail: {
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
   },
   empty: {
     color: theme.colors.textSecondary,
