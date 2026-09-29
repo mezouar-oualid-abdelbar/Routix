@@ -77,22 +77,7 @@ function BottomTabNavigator() {
             />
           ),
         }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={BackgroundTaskScreen}
-        options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon
-              focused={focused}
-              color={color}
-              size={size}
-              activeName="settings"
-              inactiveName="settings-outline"
-            />
-          ),
-        }}
-      />
+      /> 
       {/* <Tab.Screen
         name="Settings"
         component={SettingsScreen}

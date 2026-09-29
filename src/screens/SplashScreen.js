@@ -4,6 +4,7 @@ import theme from "../styles/theme";
 import { initDatabase } from "../api/database";
 import { configureHandler } from "../services/notifications/notificationService";
 import { syncAllActivityNotifications } from "../services/notifications/activityNotifications";
+import { registerActivityLogSync } from "../services/background/activityLogSync";
 
 import useActivityStore from "../store/activityStore";
 
@@ -17,6 +18,7 @@ class SplashScreen extends Component {
       await useActivityStore.getState().loadActivities();
       await useActivityStore.getState().refreshToday();
       await syncAllActivityNotifications();
+      await registerActivityLogSync();
     } catch (error) {
       console.warn("Startup init failed, opening app anyway:", error);
     }
