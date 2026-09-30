@@ -19,20 +19,37 @@ const renderScheduleUi = (schedule, scheduleData) => {
   }
 };
 
-export function ActivityCard({ activity, onPress, onLongPress, footer }) {
+export function ActivityCard({
+  activity,
+  onPress,
+  onLongPress,
+  footer,
+  badge,
+  showSchedule = true,
+  compact = false,
+}) {
   return (
     <TouchableOpacity
       onPress={onPress}
       onLongPress={onLongPress}
       activeOpacity={0.8}
     >
-      <View style={styles.card}>
-        {/* Activity title */}
-        <Text style={styles.title}>{activity.title}</Text>
-        <Text style={styles.title}>{activity.schedule}</Text>
+      <View style={[styles.card, compact && styles.compactCard]}>
+        {/* Activity title with optional status badge */}
+        <View style={styles.titleRow}>
+          <Text
+            style={[styles.title, compact && styles.compactTitle]}
+            numberOfLines={compact ? 1 : undefined}
+          >
+            {activity.title}
+          </Text>
+          {badge ? <View style={styles.badgeSlot}>{badge}</View> : null}
+        </View>
         {/* Schedule */}
-        {renderScheduleUi(activity.schedule, activity.scheduleData)}
-        {footer}
+        {showSchedule && !compact
+          ? renderScheduleUi(activity.schedule, activity.scheduleData)
+          : null}
+        {!compact && footer ? footer : null}
       </View>
     </TouchableOpacity>
   );
@@ -45,11 +62,26 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
   },
-
+  compactCard: {
+    padding: theme.spacing.sm,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing.sm,
+  },
   title: {
+    flexShrink: 1,
     fontSize: theme.fontSizes.md,
     fontWeight: theme.fontWeights.medium,
     color: theme.colors.text,
+  },
+  compactTitle: {
+    fontSize: theme.fontSizes.sm,
+  },
+  badgeSlot: {
+    flexShrink: 0,
   },
 });
 

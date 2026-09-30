@@ -4,8 +4,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  Button,
+  TouchableOpacity,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import theme from "../styles/theme";
 import ActivityCard from "../components/ActivityCard";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,10 +28,13 @@ export default function ActivitiesScreen({ navigation }) {
 
       <FlatList
         style={styles.list}
+        contentContainerStyle={styles.listContent}
         data={activities}
         renderItem={({ item }) => (
           <ActivityCard
             activity={item}
+            showSchedule={false}
+            compact
             onPress={() =>
               navigation.navigate("ActivityDetailScreen", {
                 activityId: item.id,
@@ -41,11 +45,13 @@ export default function ActivitiesScreen({ navigation }) {
         keyExtractor={(item) => String(item.id)}
       />
 
-      <Button
-        color={theme.colors.primary}
-        title="create activity"
+      <TouchableOpacity
+        style={styles.createButton}
+        activeOpacity={0.8}
         onPress={() => navigation.navigate("CreateActivityScreen")}
-      />
+      >
+        <Ionicons name="add" size={28} color={theme.colors.textInverse} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -75,5 +81,24 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+  },
+  listContent: {
+    paddingBottom: theme.spacing.xxl + theme.spacing.md,
+  },
+  createButton: {
+    position: "absolute",
+    left: theme.spacing.md,
+    bottom: theme.spacing.md,
+    width: 52,
+    height: 52,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });

@@ -27,6 +27,23 @@ export function buildTodayEntries(
     });
 }
 
+// Build today's entries directly from activity_logs rows (no schedule re-derivation).
+export function buildEntriesFromLogs(activities, logs) {
+  const activitiesById = {};
+  activities.forEach((activity) => {
+    activitiesById[activity.id] = activity;
+  });
+
+  return (logs ?? [])
+    .filter((log) => activitiesById[log.activityId])
+    .map((log) => ({
+      activity: activitiesById[log.activityId],
+      log,
+      status: log.status ?? LOG_STATUS.PENDING,
+      progress: log.progress ?? 0,
+    }));
+}
+
 export function getProgressSummary(entry) {
   const { activity, log, progress } = entry;
   const data = log?.data ?? null;

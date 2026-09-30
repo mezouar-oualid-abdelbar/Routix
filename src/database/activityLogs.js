@@ -94,6 +94,11 @@ export async function updateActivityLog(id, patch) {
   return updated;
 }
 
+export async function deleteActivityLog(id) {
+  const database = await ensureDb();
+  await database.runAsync("DELETE FROM activity_logs WHERE id = ?", id);
+}
+
 export async function getLogsForDate(logDate) {
   const database = await ensureDb();
   const rows = await database.getAllAsync(
@@ -121,6 +126,16 @@ export async function getActivityHistory(activityId, limit = 30) {
     limit,
   );
   return rows.map(toActivityLog);
+}
+
+export async function getLastCompletedDate(activityId) {
+  const database = await ensureDb();
+  const rows = await database.getAllAsync(
+    `SELECT MAX(log_date) AS last_date FROM activity_logs
+     WHERE activity_id = ? AND status = 'completed'`,
+    activityId,
+  );
+  return rows[0]?.last_date ?? null;
 }
 
 // { activityId: lastCompletedDate } — optionally only completions before a date.

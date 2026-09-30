@@ -92,7 +92,7 @@ function BottomTabNavigator() {
             />
           ),
         }}
-      />
+      /> */}
       <Tab.Screen
         name="CreateActivityScreen"
         component={CreateActivityScreen}

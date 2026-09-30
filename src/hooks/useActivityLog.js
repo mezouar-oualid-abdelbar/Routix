@@ -1,6 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getOrCreateActivityLog, updateActivityLog } from "../database/activityLogs";
+import { resyncActivityNotifications } from "../services/notifications/activityNotifications";
+import useActivityStore from "../store/activityStore";
 import { LOG_STATUS } from "../constants/logStatus";
+
+// Keep the Home screen's today entries in sync without re-reading the DB on
+// every timer tick: refresh immediately on status changes, debounce otherwise.
+const HOME_REFRESH_DEBOUNCE_MS = 2000;
+let homeRefreshTimer = null;
+
+function refreshHomeToday() {
+  useActivityStore
+    .getState()
+    .refreshToday()
+    .catch((error) => console.warn("Home refresh after log change failed:", error));
+}
+
+function scheduleHomeRefresh() {
+  if (homeRefreshTimer) return;
+  homeRefreshTimer = setTimeout(() => {
+    homeRefreshTimer = null;
+    refreshHomeToday();
+  }, HOME_REFRESH_DEBOUNCE_MS);
+}
 
 // Shared lifecycle for one activity on one day: loads (or lazily creates)
 // today's log and exposes start / progress / complete actions.
@@ -45,8 +67,15 @@ export function useActivityLog(activityId, logDate) {
     if (!current) return null;
     const updated = await updateActivityLog(current.id, patch);
     if (updated) {
+      const statusChanged = updated.status !== current.status;
       logRef.current = updated;
       setLog(updated);
+      // Fire-and-forget: never block the timer tick path on a DB re-read.
+      if (statusChanged) {
+        refreshHomeToday();
+      } else {
+        scheduleHomeRefresh();
+      }
     }
     return updated;
   }, []);
@@ -91,9 +120,15 @@ export function useActivityLog(activityId, logDate) {
         startedAt: current.startedAt ?? Date.now(),
       };
       if (data !== undefined) patch.data = data;
-      return persist(patch);
+      return persist(patch).then((updated) => {
+        // A completion can move a rolling interval anchor: recompute alarms.
+        resyncActivityNotifications(activityId).catch((error) =>
+          console.warn("Alarm resync after completion failed:", error),
+        );
+        return updated;
+      });
     },
-    [persist],
+    [persist, activityId],
   );
 
   return { log, loading, start, saveProgress, complete };

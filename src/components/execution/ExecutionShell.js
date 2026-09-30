@@ -2,19 +2,7 @@ import React from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import theme from "../../styles/theme";
-import { LOG_STATUS } from "../../constants/logStatus";
-
-const STATUS_COLORS = {
-  [LOG_STATUS.PENDING]: theme.colors.textSecondary,
-  [LOG_STATUS.IN_PROGRESS]: theme.colors.info,
-  [LOG_STATUS.COMPLETED]: theme.colors.success,
-};
-
-const STATUS_LABELS = {
-  [LOG_STATUS.PENDING]: "Pending",
-  [LOG_STATUS.IN_PROGRESS]: "In Progress",
-  [LOG_STATUS.COMPLETED]: "Completed",
-};
+import { StatusBadge } from "../common/StatusBadge";
 
 // Shared header (title + progress bar + status) for type execution screens.
 export function ExecutionShell({ title, subtitle, status, progress, children }) {
@@ -29,9 +17,10 @@ export function ExecutionShell({ title, subtitle, status, progress, children }) 
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${clamped}%` }]} />
         </View>
-        <Text style={[styles.statusText, { color: STATUS_COLORS[status] ?? STATUS_COLORS[LOG_STATUS.PENDING] }]}>
-          {STATUS_LABELS[status] ?? status} • {clamped}%
-        </Text>
+        <View style={styles.statusRow}>
+          <StatusBadge status={status} />
+          <Text style={styles.statusText}>• {clamped}%</Text>
+        </View>
       </View>
 
       <View style={styles.content}>{children}</View>
@@ -73,11 +62,17 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: theme.colors.primary,
   },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
   statusText: {
     fontSize: theme.fontSizes.sm,
     fontWeight: theme.fontWeights.medium,
-    textAlign: "center",
-    marginTop: theme.spacing.xs,
+    color: theme.colors.textSecondary,
   },
   content: {
     flex: 1,
