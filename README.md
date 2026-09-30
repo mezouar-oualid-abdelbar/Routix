@@ -1,3 +1,5 @@
+![App Screenshot](src/assets/images/logo.png)
+
 # Routix
 
 A React Native (Expo) routine & activity tracker. Define activities with types and
