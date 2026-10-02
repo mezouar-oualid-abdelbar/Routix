@@ -12,6 +12,7 @@ import { InfoForm } from "../components/InfoForm";
 import { TypeForm } from "../components/TypeForm";
 import { ScheduleForm } from "../components/ScheduleForm";
 import { Time } from "../components/inputs/Time";
+import { ReviewStep } from "../components/create-activity/ReviewStep";
 import {
   PRIORITY_OPTIONS,
   TYPE_OPTIONS,
@@ -20,6 +21,13 @@ import {
 import useActivityStore from "../store/activityStore";
 import { validateStep } from "../utils/validateActivity";
 
+const STEPS = [
+  { id: 1, label: "Info" },
+  { id: 2, label: "Type" },
+  { id: 3, label: "Schedule" },
+  { id: 4, label: "Review" },
+];
+
 export function EditActivityScreen({ navigation, route }) {
   const { activityId } = route.params ?? {};
   const activity = useActivityStore((state) =>
@@ -27,8 +35,7 @@ export function EditActivityScreen({ navigation, route }) {
   );
   const updateActivity = useActivityStore((state) => state.updateActivity);
 
-  // Local form state prefilled from the existing activity (independent
-  // from the create-activity draft so an in-progress creation is kept).
+  const [step, setStep] = useState(1);
   const [title, setTitle] = useState(activity?.title ?? "");
   const [description, setDescription] = useState(activity?.description ?? "");
   const [priority, setPriority] = useState(activity?.priority ?? "low");
@@ -55,80 +62,106 @@ export function EditActivityScreen({ navigation, route }) {
     );
   }
 
-  const handleSave = async () => {
-    const draft = { title, type, typeData, schedule, scheduleData };
+  const draft = {
+    title,
+    description,
+    priority,
+    type,
+    typeData,
+    schedule,
+    scheduleData,
+    time,
+  };
 
-    const step1 = validateStep(1, draft);
-    if (!step1.isValid) {
-      setError(Object.values(step1.errors)[0]);
-      return;
-    }
-    const step2 = validateStep(2, draft);
-    if (!step2.isValid) {
-      setError(Object.values(step2.errors)[0]);
-      return;
-    }
-    const step3 = validateStep(3, draft);
-    if (!step3.isValid) {
-      setError(Object.values(step3.errors)[0]);
-      return;
+  const handleSave = async () => {
+    for (const s of [1, 2, 3]) {
+      const result = validateStep(s, draft);
+      if (!result.isValid) {
+        setError(Object.values(result.errors)[0]);
+        setStep(s); // jump to the step with the problem
+        return;
+      }
     }
 
     setError(null);
 
-    // Update in place; the activity ID stays the same.
     await updateActivity({
       id: activity.id,
-      title,
-      description,
-      priority,
-      type,
-      typeData,
-      schedule,
-      scheduleData,
-      time,
+      ...draft,
       status: activity.status,
     });
 
     navigation.goBack();
   };
 
+  const selectStep = (id) => {
+    setError(null);
+    setStep(id);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Edit activity</Text>
+
+      <View style={styles.tabsRow}>
+        {STEPS.map((s) => {
+          const active = step === s.id;
+          return (
+            <TouchableOpacity
+              key={s.id}
+              style={[styles.tab, active && styles.tabActive]}
+              onPress={() => selectStep(s.id)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                {s.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <InfoForm
-          title={title}
-          setTitle={setTitle}
-          discribtion={description}
-          setDiscribtion={setDescription}
-          priority={priority}
-          setPriority={setPriority}
-          switchPriority={PRIORITY_OPTIONS}
-        />
+        {step === 1 && (
+          <InfoForm
+            title={title}
+            setTitle={setTitle}
+            discribtion={description}
+            setDiscribtion={setDescription}
+            priority={priority}
+            setPriority={setPriority}
+            switchPriority={PRIORITY_OPTIONS}
+          />
+        )}
 
-        <TypeForm
-          type={type}
-          switchType={TYPE_OPTIONS}
-          setType={setType}
-          typeData={typeData}
-          setTypeData={setTypeData}
-        />
+        {step === 2 && (
+          <TypeForm
+            type={type}
+            switchType={TYPE_OPTIONS}
+            setType={setType}
+            typeData={typeData}
+            setTypeData={setTypeData}
+          />
+        )}
 
-        <ScheduleForm
-          schedule={schedule}
-          switchSchedule={SCHEDULE_OPTIONS}
-          setSchedule={setSchedule}
-          scheduleData={scheduleData}
-          setScheduleData={setScheduleData}
-        />
+        {step === 3 && (
+          <>
+            <ScheduleForm
+              schedule={schedule}
+              switchSchedule={SCHEDULE_OPTIONS}
+              setSchedule={setSchedule}
+              scheduleData={scheduleData}
+              setScheduleData={setScheduleData}
+            />
+            <Text style={styles.label}>Time</Text>
+            <Time time={time} setTime={setTime} />
+          </>
+        )}
 
-        <Text style={styles.label}>Time</Text>
-        <Time time={time} setTime={setTime} />
+        {step === 4 && <ReviewStep draft={draft} />}
 
         {error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
@@ -155,6 +188,31 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeights.bold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
+  },
+  tabsRow: {
+    flexDirection: "row",
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.md,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: theme.spacing.sm,
+    alignItems: "center",
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.textSecondary,
+  },
+  tabActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  tabText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSizes.sm,
+  },
+  tabTextActive: {
+    color: theme.colors.background,
+    fontWeight: theme.fontWeights.bold,
   },
   label: {
     fontSize: theme.fontSizes.sm,
