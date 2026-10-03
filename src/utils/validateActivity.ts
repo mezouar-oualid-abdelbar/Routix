@@ -1,0 +1,59 @@
+export interface ActivityDraft {
+  title?: string;
+  type?: string;
+  typeData?: any;
+  schedule?: string;
+  scheduleData?: any;
+  [key: string]: any;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: Record<string, string>;
+}
+
+export function validateStep(step: number, draft: ActivityDraft): ValidationResult {
+  const errors: Record<string, string> = {};
+
+  if (step === 1) {
+    if (!draft.title.trim()) {
+      errors.title = "Title is required";
+    }
+  }
+
+  if (step === 2) {
+    if (
+      draft.type === "timed" &&
+      (!draft.typeData ||
+        (draft.typeData.hours ?? 0) + (draft.typeData.minutes ?? 0) <= 0)
+    ) {
+      errors.typeData = "Duration is required";
+    }
+    if (
+      draft.type === "follow_up" &&
+      (!draft.typeData || draft.typeData.length === 0)
+    ) {
+      errors.typeData = "Add at least one step";
+    }
+    if (
+      draft.type === "multi_activities" &&
+      (!draft.typeData || draft.typeData.length === 0)
+    ) {
+      errors.typeData = "Add at least one activity";
+    }
+  }
+
+  if (step === 3) {
+    if (
+      draft.schedule === "weekly" &&
+      (!draft.scheduleData || draft.scheduleData.length === 0)
+    ) {
+      errors.scheduleData = "Select at least one day";
+    }
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
